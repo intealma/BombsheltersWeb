@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Shelters — find the nearest one</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Nunito+Sans:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  #intro{
+    position:fixed;inset:0;z-index:100;
+    background:#000000;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;
+    cursor:pointer;
+    transition:opacity 0.6s ease;
+  }
+  #intro.fading{opacity:0;pointer-events:none;}
+  #intro .stage{
+    position:relative;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;width:100%;height:100%;
+  }
+  #ascii{
+    font-family:'JetBrains Mono',monospace;
+    font-size:clamp(6px, 0.9vw, 11px);
+    line-height:1.15;letter-spacing:0;color:#ffffff;
+    white-space:pre;text-align:left;user-select:none;
+    text-shadow:0 0 2px rgba(255,255,255,0.25);
+  }
+  #introCaption{
+    position:absolute;bottom:8%;left:50%;transform:translateX(-50%);
+    font-size:11px;letter-spacing:0.3em;text-transform:uppercase;
+    color:#4b5563;opacity:0;transition:opacity 0.1s ease;white-space:nowrap;
+  }
+  #introSkip{
+    position:absolute;bottom:4%;left:50%;transform:translateX(-50%);
+    font-size:9.5px;letter-spacing:0.2em;text-transform:uppercase;
+    color:#2c3540;opacity:0;transition:opacity 0.1s ease;
+  }
+  #introSkip.show{opacity:1;}
+  .intro-mark{
+    position:absolute;top:6%;left:6%;
+    font-size:11px;letter-spacing:0.15em;color:#35404d;text-transform:uppercase;
+  }
+  .intro-mark span{color:#cfd8e3;}
+
+  :root{
+    --font-ui: "Avenir Next", "Avenir", "Century Gothic", "Nunito Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    --bg-deep:#000000;
+    --panel:#0b0c10;
+    --panel-raised:#12141a;
+    --line:#2f333d;
+    --white:#ffffff;
+    --white-dim:#d0d6de;
+    --text-primary:#ffffff;
+    --text-muted:#b8bec9;
+    --text-faint:#6a707d;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--bg-deep);color:var(--text-primary);
+    font-family:var(--font-ui),system-ui,sans-serif;overflow:hidden;}
+  #map{position:absolute;inset:0;background:#000000;}
+
+  .topbar{
+    position:absolute;top:0;left:0;right:0;z-index:5;
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;
+    background:linear-gradient(180deg, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.9) 70%, rgba(0,0,0,0) 100%);
+    pointer-events:none;
+  }
+  .topbar > *{pointer-events:auto;}
+  .brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .brand-mark{width:28px;height:28px;flex-shrink:0;}
+  .brand-text{
+    font-family:var(--font-ui);
+    font-weight:600;font-size:15px;letter-spacing:0.08em;
+    line-height:1;white-space:nowrap;text-transform:uppercase;
+  }
+  .brand-text small{
+    display:block;font-family:var(--font-ui);font-weight:400;
+    font-size:10.5px;color:var(--text-muted);letter-spacing:0.03em;margin-top:4px;
+    text-transform:none;
+  }
+
+  .searchwrap{position:relative;flex:1;max-width:420px;}
+  .searchwrap input{
+    width:100%;
+    background:#101218;
+    border:1px solid #575c66;
+    color:var(--text-primary);
+    border-radius:4px;
+    padding:11px 14px 11px 38px;
+    font-size:14.5px;
+    font-family:inherit;
+    outline:none;
+    transition:border-color .15s;
+  }
+  .searchwrap input:focus{border-color:var(--white-dim);}
+  .searchwrap input::placeholder{color:var(--text-faint);}
+  .search-icon{
+    position:absolute;left:12px;top:50%;transform:translateY(-50%);
+    width:16px;height:16px;color:var(--text-faint);pointer-events:none;
+  }
+  .locate-btn{
+    flex-shrink:0;width:42px;height:42px;
+    background:#101218;border:1px solid #575c66;border-radius:4px;
+    color:var(--text-primary);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .locate-btn:hover{border-color:var(--white-dim);}
+  .locate-btn svg{width:19px;height:19px;}
+  .locate-btn.active{background:var(--white);border-color:var(--white);color:#08090c;}
+
+  .stat-pill{
+    position:absolute;top:14px;right:16px;z-index:5;
+    background:var(--panel);border:1px solid var(--line);border-radius:4px;
+    padding:8px 12px;
+    font-family:var(--font-ui);font-size:11px;color:var(--text-muted);
+    letter-spacing:0.03em;
+    display:none;
+  }
+  @media (min-width:720px){.stat-pill{display:block;}}
+  .stat-pill b{color:var(--white);font-weight:600;}
+
+  .panel{
+    position:absolute;z-index:10;
+    background:var(--panel-raised);
+    border:1px solid var(--line);
+    box-shadow:0 -8px 30px rgba(0,0,0,0.6);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+  }
+  .panel{
+    left:0;right:0;bottom:0;
+    border-radius:14px 14px 0 0;
+    padding:10px 20px 24px;
+    transform:translateY(115%);
+  }
+  .panel.open{transform:translateY(0);}
+  .panel-handle{width:36px;height:4px;border-radius:3px;background:var(--line);margin:2px auto 14px;}
+  .panel-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;}
+  .panel-icon{width:36px;height:36px;flex-shrink:0;margin-top:2px;}
+  .panel-address{
+    font-family:var(--font-ui);font-weight:600;
+    font-size:19px;line-height:1.25;letter-spacing:0.01em;
+  }
+  .panel-muni{font-size:12px;color:var(--text-muted);margin-top:4px;letter-spacing:0.04em;text-transform:uppercase;}
+  .panel-close{
+    margin-left:auto;flex-shrink:0;width:32px;height:32px;border-radius:4px;
+    background:#101218;border:1px solid #575c66;
+    color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .panel-stats{display:flex;gap:10px;margin-bottom:16px;}
+  .panel-stat{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px 12px;}
+  .panel-stat-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-faint);margin-bottom:3px;}
+  .panel-stat-value{font-family:var(--font-ui);font-weight:600;font-size:16px;color:var(--white);}
+  .panel-actions{display:flex;gap:10px;}
+  .panel-btn{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+    padding:12px;border-radius:4px;border:1px solid var(--white);
+    font-family:var(--font-ui);font-weight:600;font-size:13px;cursor:pointer;
+    text-decoration:none;letter-spacing:0.03em;text-transform:uppercase;
+    background:var(--white);color:#08090c;
+  }
+  .panel-btn:hover{background:var(--white-dim);}
+  .panel-btn svg{width:15px;height:15px;}
+
+  @media (min-width:720px){
+    .panel{
+      left:auto;right:16px;bottom:16px;top:auto;width:340px;
+      border-radius:8px;
+      transform:translateY(calc(100% + 20px));
+    }
+    .panel.open{transform:translateY(0);}
+    .panel-handle{display:none;}
+  }
+
+  .loading{
+    position:absolute;inset:0;z-index:20;
+    background:radial-gradient(circle at center, #14171d 0%, #000000 70%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  }
+  .loading svg{width:40px;height:40px;animation:pulse 1.4s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:0.35;}50%{opacity:1;}}
+  .loading-text{font-size:12px;color:var(--text-muted);font-family:var(--font-ui);letter-spacing:0.08em;}
+  .loading.hide{display:none;}
+
+  .maplibregl-ctrl-attrib{background:rgba(0,0,0,0.9) !important;color:var(--text-faint) !important;font-size:10px !important;}
+  .maplibregl-ctrl-attrib a{color:var(--text-muted) !important;}
+  .maplibregl-ctrl-bottom-right{bottom:env(safe-area-inset-bottom,0);}
+  .maplibregl-ctrl-group{background:var(--panel) !important;border:1px solid var(--line) !important;}
+  .maplibregl-ctrl-group button{filter:invert(1) brightness(1.2);}
+
+  .search-results{
+    position:absolute;top:100%;left:0;right:0;margin-top:6px;
+    background:var(--panel-raised);border:1px solid var(--line);border-radius:4px;
+    max-height:280px;overflow-y:auto;display:none;
+    box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  }
+  .search-results.show{display:block;}
+  .search-result-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--line);font-size:13px;font-family:var(--font-ui);}
+  .search-result-item:last-child{border-bottom:none;}
+  .search-result-item:hover{background:var(--panel);}
+  .search-result-item .muni{color:var(--text-faint);font-size:11px;margin-top:2px;text-transform:uppercase;letter-spacing:0.04em;}
+</style>
+</head>
+<body>
+
+<div id="intro">
+  <div class="stage"><pre id="ascii"></pre></div>
+</div>
+
+<div class="loading" id="loading">
+  <svg viewBox="0 0 40 40" fill="none">
+    <rect x="5" y="5" width="30" height="30" rx="2" stroke="#e7eaef" stroke-width="2"/>
+    <path d="M20 12 L30 27 H10 Z" stroke="#e7eaef" stroke-width="2" stroke-linejoin="round"/>
+  </svg>
+  <div class="loading-text">LOADING 63,413 SHELTERS…</div>
+</div>
+
+<div id="map"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 40 40" fill="none">
+      <rect x="5" y="5" width="30" height="30" rx="2" stroke="#e7eaef" stroke-width="2.2"/>
+      <path d="M20 12 L30 27 H10 Z" stroke="#e7eaef" stroke-width="2.2" stroke-linejoin="round"/>
+    </svg>
+    <div class="brand-text">SHELTERS<small>Find your nearest</small></div>
+  </div>
+  <div class="searchwrap">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+    </svg>
+    <input id="search" type="text" placeholder="Search address or municipality…" autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+  <button class="locate-btn" id="locateBtn" title="Show my location">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+    </svg>
+  </button>
+</div>
+
+<div class="stat-pill">63,413 SHELTERS · <b id="visibleCount">–</b> VISIBLE</div>
+
+<div class="panel" id="panel">
+  <div class="panel-handle"></div>
+  <div class="panel-header">
+    <svg class="panel-icon" viewBox="0 0 40 40" fill="none">
+      <rect x="5" y="5" width="30" height="30" rx="2" stroke="#e7eaef" stroke-width="2"/>
+      <path d="M20 12 L30 27 H10 Z" stroke="#e7eaef" stroke-width="2" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <div class="panel-address" id="panelAddress">—</div>
+      <div class="panel-muni" id="panelMuni">—</div>
+    </div>
+    <div class="panel-close" id="panelClose">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </div>
+  </div>
+  <div class="panel-stats">
+    <div class="panel-stat">
+      <div class="panel-stat-label">Capacity</div>
+      <div class="panel-stat-value" id="panelCapacity">—</div>
+    </div>
+    <div class="panel-stat">
+      <div class="panel-stat-label">Municipality</div>
+      <div class="panel-stat-value" id="panelMuni2" style="font-size:13px;">—</div>
+    </div>
+  </div>
+  <div class="panel-actions">
+    <a class="panel-btn" id="directionsBtn" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M3 11l18-8-8 18-2-8-8-2z"/>
+      </svg>
+      Directions
+    </a>
+  </div>
+</div>
+
+<script>
+(function(){
+  const RAW = `                                                                            *#%=       :##+         
+                                .=##%%+==+%%#+**#%%****%%####%%%#*+===---:-=....:=##-.=....+:       
+                            -##*...-##:...**=...=**....**=...=**....*#=...+**#############==        
+                          *..=**+:.-##:...*#=...=**....**=...+**....*#-..*  .....+##-.....  =       
+                        *#-..*#%...:**:...**=...=**....**=...+**....*#=..*- ...*@-**.*#...  .-      
+                      .+#*=+: :#...:**:...**=...-**....**=...+**....*#=.%   .....--.+....  .*       
+                     =.:##-   %#...:**:...**=...=#*....**=...+**....*#-.-=   ....+:.+...     %      
+                    *..:*    -#*...-#*:...**=...-**....**=...=**....**-..+   .....+@:...    =.      
+                   %*.-:     %#*...-**:...**=...-**....**=...=**....*#-..*-..  +--**+---  . -       
+                  #**=      +=#*...:*#-+..**=...-**....**=...=**....##-..+.=*--*      -.--+         
+    :=#+        .--*#      *.=##...-*#=*--===*##%++====+++=-=+#+#%:.*#-...*:    ==++++-             
+   =:-:        =:.=#     =-..=#*...:*   :=...+#+.+           #..+#%+*#-...:%*                       
+   +.:+      :%*..=  :+###...=#*.:+.      =..=*+..+         #...+#*%##-...:##*.                     
+   .=..=*=+=-=#*+.  +..*#*...=%*:          :-=*+..=        %*...+*%  -+...:##.:+                    
+     +:.=*+..-%:    :=.*#*==                +=*+..+       #**...+%.   .*..:##...#                   
+       .-=-:.        =.*#*.=.               +=*+..+      *=**...#:      +-:**....#=                 
+                      %##*.....+            +=*+...:::+:#:-**..:+=*      :%##....*#+::-+            
+                       #**......+            #*+.......-#.-**......*       ##....*#-....*           
+                        #**+++++.             =*+======: :+++=====-         :=======----`;
+
+  const asciiEl = document.getElementById('ascii');
+  const captionEl = document.getElementById('introCaption');
+  const skipEl = document.getElementById('introSkip');
+  const introEl = document.getElementById('intro');
+
+  const lines = RAW.split('\n');
+  const width = Math.max(...lines.map(l => l.length));
+  const padded = lines.map(l => l.padEnd(width, ' '));
+  const rows = padded.length;
+
+  const thresholds = padded.map((row, r) =>
+    row.split('').map((ch, c) => {
+      if (ch === ' ') return -1;
+      const wind = (c / width) + (r / rows) * 0.25;
+      const jitter = (Math.sin(r * 12.9898 + c * 78.233) * 43758.5453) % 1;
+      const jitterAbs = Math.abs(jitter) * 0.35;
+      return wind * 0.75 + jitterAbs;
+    })
+  );
+
+  const erodeChars = ['.', ':', '·', "'", ','];
+
+  function render(progress) {
+    let out = '';
+    const fullyGone = progress >= 1;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < width; c++) {
+        const ch = padded[r][c];
+        const th = thresholds[r][c];
+        if (th < 0 || fullyGone) { out += ' '; continue; }
+        const dist = th - progress;
+        if (dist < 0) { out += ' '; }
+        else if (dist < 0.05) {
+          const idx = Math.floor((r * width + c + Math.floor(progress * 97)) % erodeChars.length);
+          out += erodeChars[idx];
+        } else { out += ch; }
+      }
+      out += '\n';
+    }
+    asciiEl.textContent = out;
+  }
+  function easeInOutSine(x) { return -(Math.cos(Math.PI * x) - 1) / 2; }
+
+  const START_DISSOLVE = 260, DISSOLVE = 4600, HOLD_AFTER = 300;
+  let start = performance.now(), done = false, advanced = false;
+
+  function goToApp(){
+    if (advanced) return;
+    advanced = true;
+    introEl.classList.add('fading');
+    setTimeout(() => { introEl.style.display = 'none'; }, 700);
+  }
+  function frame(now) {
+    const t = now - start;
+    if (t < START_DISSOLVE) {
+      render(easeInOutSine(Math.min(t / START_DISSOLVE, 1)) * 0.06);
+      if (captionEl) captionEl.style.opacity = 0;
+    } else if (t < START_DISSOLVE + DISSOLVE) {
+      const local = (t - START_DISSOLVE) / DISSOLVE;
+      render(0.06 + easeInOutSine(local) * 0.99);
+      if (captionEl) captionEl.style.opacity = String(Math.min(local * 1.45, 1));
+    } else if (!done) {
+      render(1.05);
+      if (skipEl) skipEl.classList.add('show');
+      done = true;
+      setTimeout(goToApp, HOLD_AFTER);
+    }
+    if (!done) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  introEl.addEventListener('click', goToApp);
+})();
+</script>
+
+<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<script>
+const DATA_URL = "shelters.geojson";
+const SWEDEN_BOUNDS = [[7.5, 53.2], [26.8, 71.5]];
+const loadingEl = document.getElementById("loading");
+let loadingResolved = false;
+
+function hideLoading(){
+  if (loadingResolved) return;
+  loadingResolved = true;
+  loadingEl.classList.add("hide");
+}
+
+async function buildStyle(){
+  const resp = await fetch('https://tiles.openfreemap.org/styles/positron');
+  const base = await resp.json();
+  const sourceId = Object.keys(base.sources).find(k => base.sources[k].type === 'vector') || Object.keys(base.sources)[0];
+  return {
+    version: 8,
+    sources: base.sources,
+    glyphs: base.glyphs,
+    layers: [
+      { id: 'bg', type: 'background', paint: { 'background-color': '#000000' } },
+      { id: 'water-outline', type: 'line', source: sourceId, 'source-layer': 'water',
+        paint: { 'line-color': '#f7f7f5', 'line-width': 0.7, 'line-opacity': 0.6 } },
+      { id: 'boundary', type: 'line', source: sourceId, 'source-layer': 'boundary',
+        filter: ['<=', ['get', 'admin_level'], 4],
+        paint: { 'line-color': '#4a4f57', 'line-width': 0.6, 'line-dasharray': [3, 2] } },
+      { id: 'roads', type: 'line', source: sourceId, 'source-layer': 'transportation',
+        paint: { 'line-color': '#f7f7f5',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.25, 12, 0.9, 16, 2],
+          'line-opacity': 0.5 } },
+      { id: 'buildings', type: 'line', source: sourceId, 'source-layer': 'building', minzoom: 13,
+        paint: { 'line-color': '#f7f7f5', 'line-width': 0.5, 'line-opacity': 0.4 } },
+      { id: 'places', type: 'symbol', source: sourceId, 'source-layer': 'place',
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-font': ['Noto Sans Regular'],
+          'text-size': ['interpolate', ['linear'], ['zoom'], 4, 12, 6, 14, 10, 16],
+          'text-transform': 'uppercase',
+          'text-letter-spacing': 0.1
+        },
+        paint: {
+          'text-color': '#f7f7f5',
+          'text-halo-color': '#000000',
+          'text-halo-width': 1.8
+        } }
+    ]
+  };
+}
+
+function shelterIconData(){
+  const size = 32;
+  const c = document.createElement('canvas'); c.width = size; c.height = size;
+  const cx = c.getContext('2d');
+  cx.strokeStyle = '#f7f7f5'; cx.lineWidth = 3.2; cx.lineJoin = 'round';
+  cx.strokeRect(3, 3, size - 6, size - 6);
+  cx.beginPath();
+  cx.moveTo(size / 2, 9);
+  cx.lineTo(size - 8, size - 9);
+  cx.lineTo(8, size - 9);
+  cx.closePath();
+  cx.stroke();
+  return cx.getImageData(0, 0, size, size);
+}
+
+let map, allFeatures = [], userMarker = null;
+
+(async function init(){
+  const style = await buildStyle();
+  map = new maplibregl.Map({
+    container: "map",
+    style,
+    center: [16.8, 62.2],
+    zoom: 4.4,
+    minZoom: 4,
+    maxZoom: 18,
+    maxBounds: SWEDEN_BOUNDS,
+    dragRotate: false,
+    touchPitch: false,
+    attributionControl: { compact: true }
+  });
+  map.touchZoomRotate.disableRotation();
+
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+
+  const loadingTimeout = window.setTimeout(() => {
+    console.warn('Loading took too long, hiding the loader.');
+    hideLoading();
+  }, 8000);
+
+  map.on('error', (e) => {
+    console.error('MapLibre error:', e.error);
+  });
+
+  map.on("load", async () => {
+    try {
+      map.addImage('shelter-icon', shelterIconData());
+
+      const res = await fetch(DATA_URL);
+      if (!res.ok) throw new Error(`Kunde inte hämta ${DATA_URL}: ${res.status}`);
+      const geojson = await res.json();
+      allFeatures = geojson.features;
+
+      console.log('Loaded', allFeatures.length, 'shelters. First feature:', JSON.stringify(allFeatures[0]));
+
+      let fixedCount = 0;
+      for (const f of allFeatures) {
+        const c = f.geometry && f.geometry.coordinates;
+        if (Array.isArray(c) && Array.isArray(c[0])) {
+          f.geometry.coordinates = c[0];
+          fixedCount++;
+        }
+      }
+      if (fixedCount) console.log('Flattened', fixedCount, 'double-nested coordinate arrays.');
+      geojson.features = allFeatures;
+
+      if (allFeatures.length && allFeatures[0].geometry) {
+        console.log('First coordinates after fix:', allFeatures[0].geometry.coordinates);
+      }
+
+      map.addSource("shelters", {
+        type: "geojson",
+        data: geojson,
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 60
+      });
+
+      const SHELTER_MINZOOM = 6;
+
+      map.addLayer({
+      id: "clusters",
+      type: "circle",
+      source: "shelters",
+      minzoom: SHELTER_MINZOOM,
+      filter: ["has", "point_count"],
+      paint: {
+        "circle-color": "rgba(10,11,15,0.65)",
+        "circle-radius": [
+          "interpolate", ["linear"], ["get", "point_count"],
+          1, 9, 20, 12, 100, 17, 1000, 24, 8000, 32
+        ],
+        "circle-stroke-width": 1.4,
+        "circle-stroke-color": "#f7f7f5"
+      }
+    });
+
+    map.addLayer({
+      id: "cluster-count",
+      type: "symbol",
+      source: "shelters",
+      minzoom: SHELTER_MINZOOM,
+      filter: ["has", "point_count"],
+      layout: {
+        "text-field": ["get", "point_count_abbreviated"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": 11
+      },
+      paint: { "text-color": "#f7f7f5" }
+    });
+
+    map.addLayer({
+      id: "shelter-icons",
+      type: "symbol",
+      source: "shelters",
+      minzoom: SHELTER_MINZOOM,
+      filter: ["!", ["has", "point_count"]],
+      layout: {
+        "icon-image": "shelter-icon",
+        "icon-size": ["interpolate", ["linear"], ["zoom"], 10, 0.32, 16, 0.7],
+        "icon-allow-overlap": true
+      }
+    });
+
+      hideLoading();
+      updateVisibleCount();
+      map.moveLayer('places');
+
+      map.on("click", "clusters", (e) => {
+        const features = map.queryRenderedFeatures(e.point, { layers: ["clusters"] });
+        const clusterId = features[0].properties.cluster_id;
+        map.getSource("shelters").getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err) return;
+          map.easeTo({ center: features[0].geometry.coordinates, zoom });
+        });
+      });
+
+      map.on("click", "shelter-icons", (e) => {
+        const f = e.features[0];
+        openPanel(f.properties, f.geometry.coordinates);
+      });
+
+      map.on("mouseenter", "clusters", () => map.getCanvas().style.cursor = "pointer");
+      map.on("mouseleave", "clusters", () => map.getCanvas().style.cursor = "");
+      map.on("mouseenter", "shelter-icons", () => map.getCanvas().style.cursor = "pointer");
+      map.on("mouseleave", "shelter-icons", () => map.getCanvas().style.cursor = "");
+
+      map.on("moveend", updateVisibleCount);
+    } catch (error) {
+      console.error(error);
+      loadingEl.innerHTML = `<div style="text-align:center;padding:0 24px;">
+        <div class="loading-text" style="color:#f7f7f5;font-size:14px;margin-bottom:8px;">COULD NOT LOAD SHELTERS</div>
+        <div class="loading-text" style="font-size:11px;">Check that shelters.geojson is in the same folder as index.html, and that the page is opened via a local server (http://localhost), not as a file.</div>
+      </div>`;
+    } finally {
+      window.clearTimeout(loadingTimeout);
+    }
+  });
+})();
+
+function updateVisibleCount(){
+  if (!map.getLayer("shelter-icons")) return;
+  const pts = map.queryRenderedFeatures({ layers: ["shelter-icons"] });
+  const clusters = map.queryRenderedFeatures({ layers: ["clusters"] });
+  let clustered = 0;
+  clusters.forEach(c => clustered += c.properties.point_count);
+  document.getElementById("visibleCount").textContent = (pts.length + clustered).toLocaleString("sv-SE");
+}
+
+function openPanel(props, coords){
+  document.getElementById("panelAddress").textContent = props.address || "Adress saknas";
+  document.getElementById("panelMuni").textContent = props.municipality || "";
+  document.getElementById("panelMuni2").textContent = props.municipality || "—";
+  document.getElementById("panelCapacity").textContent = props.capacity ? props.capacity.toLocaleString("sv-SE") : "—";
+  document.getElementById("directionsBtn").href =
+    `https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`;
+  document.getElementById("panel").classList.add("open");
+}
+document.getElementById("panelClose").addEventListener("click", () => {
+  document.getElementById("panel").classList.remove("open");
+});
+
+const searchInput = document.getElementById("search");
+const searchResults = document.getElementById("searchResults");
+
+searchInput.addEventListener("input", () => {
+  const q = searchInput.value.trim().toLowerCase();
+  if (q.length < 2){ searchResults.classList.remove("show"); return; }
+
+  const matches = allFeatures.filter(f =>
+    (f.properties.address || "").toLowerCase().includes(q) ||
+    (f.properties.municipality || "").toLowerCase().includes(q)
+  ).slice(0, 20);
+
+  if (matches.length === 0){
+    searchResults.innerHTML = `<div class="search-result-item" style="color:var(--text-faint)">No matches</div>`;
+  } else {
+    searchResults.innerHTML = matches.map((f,i) => `
+      <div class="search-result-item" data-idx="${i}">
+        ${f.properties.address}
+        <div class="muni">${f.properties.municipality} · ${f.properties.capacity} spaces</div>
+      </div>
+    `).join("");
+    [...searchResults.querySelectorAll(".search-result-item")].forEach((el, i) => {
+      el.addEventListener("click", () => {
+        const f = matches[i];
+        map.flyTo({ center: f.geometry.coordinates, zoom: 16 });
+        openPanel(f.properties, f.geometry.coordinates);
+        searchResults.classList.remove("show");
+        searchInput.value = f.properties.address;
+      });
+    });
+  }
+  searchResults.classList.add("show");
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".searchwrap")) searchResults.classList.remove("show");
+});
+
+document.getElementById("locateBtn").addEventListener("click", () => {
+  if (!navigator.geolocation) return;
+  const btn = document.getElementById("locateBtn");
+  btn.classList.add("active");
+  navigator.geolocation.getCurrentPosition((pos) => {
+    const lngLat = [pos.coords.longitude, pos.coords.latitude];
+    if (userMarker) userMarker.remove();
+    const el = document.createElement("div");
+    el.style.width = "14px"; el.style.height = "14px"; el.style.borderRadius = "50%";
+    el.style.background = "#f7f7f5"; el.style.border = "3px solid #000000";
+    el.style.boxShadow = "0 0 0 5px rgba(247,247,245,0.35)";
+    userMarker = new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
+    map.flyTo({ center: lngLat, zoom: 14 });
+  }, () => { btn.classList.remove("active"); }, { enableHighAccuracy: true });
+});
+</script>
+</body>
+</html>
