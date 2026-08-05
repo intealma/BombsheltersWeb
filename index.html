@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Shelters — find the nearest one</title>
+<title>Shelter Locator Map</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Nunito+Sans:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -129,6 +129,7 @@
     border:1px solid var(--line);
     box-shadow:0 -8px 30px rgba(0,0,0,0.6);
     transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    max-height:calc(100vh - 32px);overflow-y:auto;
   }
   .panel{
     left:0;right:0;bottom:0;
@@ -164,6 +165,128 @@
   }
   .panel-btn:hover{background:var(--white-dim);}
   .panel-btn svg{width:15px;height:15px;}
+
+  .panel-steps{margin-top:14px;display:none;}
+  .panel-steps.show{display:block;}
+  .panel-steps-label{font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-faint);margin-bottom:8px;}
+  .panel-step{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);}
+  .panel-step:last-child{border-bottom:none;}
+  .panel-step-badge{
+    flex-shrink:0;width:38px;height:22px;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:9.5px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;
+    background:#1c1f27;color:var(--text-muted);border:1px solid var(--line);
+  }
+  .panel-step-badge.transit{background:#ff3b3b;color:#fff;border-color:#ff3b3b;}
+  .panel-step-text{flex:1;min-width:0;}
+  .panel-step-label{font-size:12.5px;font-weight:600;}
+  .panel-step-detail{font-size:11px;color:var(--text-muted);margin-top:2px;}
+
+  .panel-checkin{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+  .checkin-disabled{font-size:12px;color:var(--text-faint);}
+  .checkin-btn{width:100%;}
+  .checkin-btn:disabled{opacity:0.5;cursor:default;}
+  .checkin-btn.checkout{background:transparent;color:var(--white);border-color:#575c66;}
+  .checkin-btn.checkout:hover{border-color:var(--white);background:transparent;}
+  .checkin-active{display:none;}
+  .checkin-active-text{font-size:12.5px;color:var(--text-muted);margin-bottom:10px;}
+  .checkin-elsewhere{display:none;font-size:12px;color:var(--text-faint);}
+  .checkin-error{margin-top:10px;font-size:12px;color:#ff6b6b;}
+
+  /* Calm dashboard: large hero number, plain label/value rows, color used
+     only for the three need/fullness levels — everything else stays
+     neutral gray/white so nothing competes for attention. */
+  .level-red{color:#ff5c5c !important;}
+  .level-orange{color:#ffa64d !important;}
+  .level-green{color:#4ade80 !important;}
+
+  .occ-hero{text-align:center;padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line);}
+  .occ-hero-numbers{font-family:var(--font-ui);font-weight:700;font-size:38px;line-height:1;color:var(--white);letter-spacing:-0.01em;}
+  .occ-hero-sep{color:var(--text-faint);font-weight:400;margin:0 5px;}
+  .occ-hero-label{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.08em;margin-top:7px;}
+  .occ-bar-track{height:7px;border-radius:4px;background:#1a1c22;margin-top:16px;overflow:hidden;}
+  .occ-bar-fill{height:100%;border-radius:4px;background:#4ade80;transition:width .5s ease, background .3s ease;width:0%;}
+  .occ-bar-fill.level-orange{background:#ffa64d;}
+  .occ-bar-fill.level-red{background:#ff5c5c;}
+  .occ-hero-pct{font-size:11.5px;color:var(--text-muted);margin-top:9px;}
+
+  .dash-card{margin-bottom:20px;}
+  .dash-card:last-of-type{margin-bottom:16px;}
+  .dash-card-title{
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
+    color:var(--white);margin-bottom:6px;
+  }
+  .dash-row{
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+    padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  .dash-row:last-child{border-bottom:none;}
+  .dash-row-label{font-size:12.5px;color:var(--text-muted);}
+  .dash-row-value{font-family:var(--font-ui);font-weight:600;font-size:13px;color:var(--white);text-align:right;}
+  .dash-empty{font-size:12px;color:var(--text-faint);padding:4px 0;}
+
+  .dash-activity{display:flex;flex-direction:column;}
+  .activity-row{
+    display:flex;justify-content:space-between;gap:12px;font-size:12.5px;
+    padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--text-muted);
+  }
+  .activity-row:last-child{border-bottom:none;}
+  .activity-time{color:var(--text-faint);flex-shrink:0;}
+
+  .modal-overlay{
+    position:fixed;inset:0;z-index:50;
+    background:rgba(0,0,0,0.7);
+    display:none;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:var(--panel-raised);border:1px solid var(--line);border-radius:10px;
+    width:100%;max-width:420px;max-height:88vh;display:flex;flex-direction:column;
+    box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  }
+  .modal-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 18px;border-bottom:1px solid var(--line);flex-shrink:0;
+  }
+  .modal-title{font-family:var(--font-ui);font-weight:600;font-size:15px;letter-spacing:0.03em;text-transform:uppercase;}
+  .modal-close{
+    width:28px;height:28px;border-radius:4px;background:#101218;border:1px solid #575c66;
+    display:flex;align-items:center;justify-content:center;color:var(--text-muted);cursor:pointer;flex-shrink:0;
+  }
+  .modal-body{padding:16px 18px;overflow-y:auto;flex:1;}
+  .modal-section-title{
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
+    color:var(--white);margin:18px 0 8px;
+  }
+  .modal-section-title:first-child{margin-top:0;}
+  .modal-hint{font-size:11px;color:var(--text-faint);margin-bottom:8px;}
+  .modal-field-row{display:flex;gap:10px;margin-bottom:12px;}
+  .modal-num-field{flex:1;display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.03em;}
+  .modal-num-field input{
+    background:#101218;border:1px solid #575c66;color:var(--text-primary);
+    border-radius:4px;padding:8px 10px;font-family:inherit;font-size:14px;width:100%;
+  }
+  .modal-toggle-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;font-size:12.5px;color:var(--text-muted);}
+  .modal-toggle{display:flex;border:1px solid #575c66;border-radius:4px;overflow:hidden;flex-shrink:0;}
+  .toggle-btn{
+    background:#101218;color:var(--text-muted);border:none;padding:7px 14px;
+    font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer;text-transform:uppercase;
+  }
+  .toggle-btn.active{background:#ff3b3b;color:#fff;}
+  .modal-check{
+    display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--text-muted);
+    margin-bottom:10px;cursor:pointer;line-height:1.4;
+  }
+  .modal-check input{accent-color:#ff3b3b;width:16px;height:16px;flex-shrink:0;margin-top:1px;}
+  .modal-check em{display:block;font-style:normal;font-size:11px;color:var(--text-faint);margin-top:1px;}
+  .modal-select-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12.5px;color:var(--text-muted);}
+  .modal-select-row select{
+    background:#101218;border:1px solid #575c66;color:var(--text-primary);
+    border-radius:4px;padding:6px 10px;font-family:inherit;font-size:12.5px;
+  }
+  .modal-error{padding:0 18px 12px;font-size:12px;color:#ff6b6b;flex-shrink:0;}
+  .modal-actions{display:flex;gap:10px;padding:16px 18px;border-top:1px solid var(--line);flex-shrink:0;}
 
   @media (min-width:720px){
     .panel{
@@ -202,6 +325,53 @@
   .search-result-item:last-child{border-bottom:none;}
   .search-result-item:hover{background:var(--panel);}
   .search-result-item .muni{color:var(--text-faint);font-size:11px;margin-top:2px;text-transform:uppercase;letter-spacing:0.04em;}
+  .result-tag{
+    display:inline-block;font-size:9px;font-weight:700;letter-spacing:0.05em;
+    padding:2px 5px;border-radius:3px;margin-right:6px;vertical-align:middle;
+    background:#1c1f27;color:var(--text-muted);
+  }
+  .result-tag.address{background:#ff3b3b;color:#fff;}
+
+  .locate-panel{
+    position:absolute;top:76px;right:16px;z-index:6;
+    display:none;flex-direction:column;gap:10px;width:260px;
+  }
+  .locate-panel.show{display:flex;}
+  .mode-bar{
+    display:flex;background:var(--panel-raised);border:1px solid var(--line);
+    border-radius:6px;padding:4px;gap:4px;transition:opacity .15s;
+  }
+  .mode-bar.routes-loading{opacity:0.55;pointer-events:none;}
+  .mode-btn{
+    flex:1;background:transparent;border:none;color:var(--text-muted);
+    padding:9px 0;border-radius:4px;cursor:pointer;
+    font-family:var(--font-ui);font-size:11px;font-weight:600;
+    letter-spacing:0.05em;text-transform:uppercase;
+    white-space:nowrap;overflow:hidden;text-overflow:clip;
+  }
+  .mode-btn:hover{color:var(--white);}
+  .mode-btn.active{background:#ff3b3b;color:#fff;}
+  .nearest-list{display:flex;flex-direction:column;gap:8px;}
+  .nearest-loading{
+    font-size:12px;color:var(--text-muted);padding:12px;
+    background:var(--panel-raised);border:1px solid var(--line);border-radius:6px;
+  }
+  .nearest-note{font-size:11px;color:var(--text-faint);margin-bottom:2px;padding:0 2px;}
+  .nearest-item{
+    background:var(--panel-raised);border:1px solid var(--line);border-radius:6px;
+    padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;
+    animation:nearestIn .32s ease both;
+  }
+  .nearest-item:hover{border-color:#ff3b3b;}
+  .nearest-rank{
+    width:22px;height:22px;border-radius:50%;background:#ff3b3b;color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;flex-shrink:0;
+  }
+  .nearest-info{flex:1;min-width:0;}
+  .nearest-addr{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .nearest-dist{font-size:11px;color:var(--text-muted);margin-top:2px;}
+  @keyframes nearestIn{from{opacity:0;transform:translateX(12px);}to{opacity:1;transform:translateX(0);}}
 </style>
 </head>
 <body>
@@ -215,7 +385,7 @@
     <rect x="5" y="5" width="30" height="30" rx="2" stroke="#e7eaef" stroke-width="2"/>
     <path d="M20 12 L30 27 H10 Z" stroke="#e7eaef" stroke-width="2" stroke-linejoin="round"/>
   </svg>
-  <div class="loading-text">LOADING 63,413 SHELTERS…</div>
+  <div class="loading-text">LOADING 63413 SHELTERS…</div>
 </div>
 
 <div id="map"></div>
@@ -226,7 +396,7 @@
       <rect x="5" y="5" width="30" height="30" rx="2" stroke="#e7eaef" stroke-width="2.2"/>
       <path d="M20 12 L30 27 H10 Z" stroke="#e7eaef" stroke-width="2.2" stroke-linejoin="round"/>
     </svg>
-    <div class="brand-text">SHELTERS<small>Find your nearest</small></div>
+    <div class="brand-text">SHELTER LOCATOR MAP</div>
   </div>
   <div class="searchwrap">
     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -242,7 +412,17 @@
   </button>
 </div>
 
-<div class="stat-pill">63,413 SHELTERS · <b id="visibleCount">–</b> VISIBLE</div>
+<div class="stat-pill">63413 SHELTERS · <b id="visibleCount">–</b> VISIBLE</div>
+
+<div class="locate-panel" id="locatePanel">
+  <div class="mode-bar" id="modeBar">
+    <button class="mode-btn active" data-mode="walking">Walk</button>
+    <button class="mode-btn" data-mode="cycling">Bike</button>
+    <button class="mode-btn" data-mode="driving">Car</button>
+    <button class="mode-btn" data-mode="transit">Transit</button>
+  </div>
+  <div class="nearest-list" id="nearestPanel"></div>
+</div>
 
 <div class="panel" id="panel">
   <div class="panel-handle"></div>
@@ -272,14 +452,129 @@
     </div>
   </div>
   <div class="panel-actions">
-    <a class="panel-btn" id="directionsBtn" href="#" target="_blank" rel="noopener">
+    <a class="panel-btn" id="googleMapsBtn" href="#" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <path d="M3 11l18-8-8 18-2-8-8-2z"/>
       </svg>
-      Directions
+      Google Maps
+    </a>
+    <a class="panel-btn" id="appleMapsBtn" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M3 11l18-8-8 18-2-8-8-2z"/>
+      </svg>
+      Apple Maps
     </a>
   </div>
+  <div class="panel-steps" id="panelSteps"></div>
+
+  <div class="panel-checkin" id="panelCheckin">
+    <div class="occ-hero">
+      <div class="occ-hero-numbers"><span id="occCurrent">–</span><span class="occ-hero-sep">/</span><span id="occCapacity">–</span></div>
+      <div class="occ-hero-label">People sheltered</div>
+      <div class="occ-bar-track"><div class="occ-bar-fill" id="occBarFill"></div></div>
+      <div class="occ-hero-pct" id="occPct"></div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-card-title">Current Needs</div>
+      <div class="dash-rows" id="needsRows"></div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-card-title">People &amp; Skills</div>
+      <div class="dash-rows" id="peopleRows"></div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-card-title">Resources</div>
+      <div class="dash-rows" id="resourceRows"></div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-card-title">Recent Activity</div>
+      <div class="dash-activity" id="activityRows"></div>
+    </div>
+
+    <div class="checkin-form" id="checkinForm">
+      <button class="panel-btn checkin-btn" id="checkinBtn">I'm here — check in</button>
+    </div>
+    <div class="checkin-active" id="checkinActive">
+      <div class="checkin-active-text">You're checked in here.</div>
+      <button class="panel-btn checkin-btn checkout" id="checkoutBtn">Check out</button>
+    </div>
+    <div class="checkin-elsewhere" id="checkinElsewhere">You're already checked in at another shelter.</div>
+    <div class="checkin-error" id="checkinError"></div>
+  </div>
 </div>
+
+<div class="modal-overlay" id="checkinModalOverlay">
+  <div class="modal-box" id="checkinModalBox">
+    <div class="modal-header">
+      <div class="modal-title">Check-In Details</div>
+      <div class="modal-close" id="checkinModalClose">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section-title">Basic Info &amp; Safety</div>
+      <div class="modal-field-row">
+        <label class="modal-num-field">Adults
+          <input type="number" id="ciAdults" min="1" value="1">
+        </label>
+        <label class="modal-num-field">Children (under 15)
+          <input type="number" id="ciChildren" min="0" value="0">
+        </label>
+      </div>
+      <div class="modal-toggle-row">
+        <span>Special needs or urgent medical requirements?</span>
+        <div class="modal-toggle" id="ciSpecialNeedsToggle">
+          <button type="button" class="toggle-btn active" data-value="false">No</button>
+          <button type="button" class="toggle-btn" data-value="true">Yes</button>
+        </div>
+      </div>
+
+      <div class="modal-section-title">How Can You Help the Shelter Group?</div>
+      <div class="modal-hint">Selecting a role helps organize the shelter smoothly</div>
+      <label class="modal-check"><input type="checkbox" class="ci-role" value="medical"><span>Medical / First Aid<em>Doctor, Nurse, EMT, First Responder</em></span></label>
+      <label class="modal-check"><input type="checkbox" class="ci-role" value="leadership"><span>Leadership &amp; Coordination<em>Crisis management, Military, Logistics</em></span></label>
+      <label class="modal-check"><input type="checkbox" class="ci-role" value="technical"><span>Technical &amp; Practical<em>Maintenance, Construction, Mechanical</em></span></label>
+      <label class="modal-check"><input type="checkbox" class="ci-role" value="community"><span>Community &amp; Support<em>Childcare, Multi-language translation, Elderly support</em></span></label>
+      <label class="modal-check"><input type="checkbox" class="ci-role" value="volunteer"><span>General Volunteer<em>Ready to assist with whatever is needed</em></span></label>
+
+      <div class="modal-section-title">Shared Resources &amp; Supplies</div>
+      <div class="modal-select-row">
+        <span>Water brought</span>
+        <select id="ciWater">
+          <option value="none">None</option>
+          <option value="1-3l">1–3 L</option>
+          <option value="4l_plus">4+ L</option>
+        </select>
+      </div>
+      <div class="modal-select-row">
+        <span>Food brought</span>
+        <select id="ciFood">
+          <option value="none">None</option>
+          <option value="1_day">1 day</option>
+          <option value="2_plus_days">2+ days</option>
+        </select>
+      </div>
+      <div class="modal-hint">Equipment available to share</div>
+      <label class="modal-check"><input type="checkbox" class="ci-equip" value="power_bank"><span>Power bank / Batteries</span></label>
+      <label class="modal-check"><input type="checkbox" class="ci-equip" value="first_aid_kit"><span>First Aid Kit</span></label>
+      <label class="modal-check"><input type="checkbox" class="ci-equip" value="radio"><span>Radio (Battery/Crank)</span></label>
+      <label class="modal-check"><input type="checkbox" class="ci-equip" value="flashlight"><span>Flashlight / Lantern</span></label>
+    </div>
+    <div class="modal-error" id="checkinModalError"></div>
+    <div class="modal-actions">
+      <button class="panel-btn checkin-btn checkout" id="checkinModalCancel">Cancel</button>
+      <button class="panel-btn checkin-btn" id="checkinModalSubmit">Confirm Check-In</button>
+    </div>
+  </div>
+</div>
+
+<div id="hcaptchaContainer" style="display:none;"></div>
 
 <script>
 (function(){
@@ -378,9 +673,52 @@
 </script>
 
 <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="https://js.hcaptcha.com/1/api.js?onload=onHcaptchaLoad&render=explicit" async defer></script>
 <script>
 const DATA_URL = "shelters.geojson";
 const SWEDEN_BOUNDS = [[7.5, 53.2], [26.8, 71.5]];
+
+// Actual key lives in config.js (gitignored, loaded above) so it never lands
+// in git history. See config.example.js for the template.
+const TRAFIKLAB_API_KEY = window.TRAFIKLAB_API_KEY || "";
+
+const SUPABASE_URL = window.SUPABASE_URL || "";
+const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
+const supabaseClient = (SUPABASE_URL && SUPABASE_ANON_KEY)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+const HCAPTCHA_SITE_KEY = window.HCAPTCHA_SITE_KEY || "";
+let hcaptchaWidgetId = null;
+function onHcaptchaLoad() {
+  if (!HCAPTCHA_SITE_KEY || !window.hcaptcha) return;
+  hcaptchaWidgetId = hcaptcha.render("hcaptchaContainer", { sitekey: HCAPTCHA_SITE_KEY, size: "invisible" });
+}
+async function getCaptchaTokenOnce() {
+  if (!window.hcaptcha || hcaptchaWidgetId === null) return null;
+  try {
+    const res = await hcaptcha.execute(hcaptchaWidgetId, { async: true });
+    return res && res.response ? res.response : null;
+  } catch (err) {
+    console.warn("hCaptcha challenge failed", err);
+    return null;
+  } finally {
+    hcaptcha.reset(hcaptchaWidgetId);
+  }
+}
+
+// The very first execute() right after the widget mounts can fail on a
+// transient timing/network hiccup — retry once before giving up, so a real
+// user doesn't have to notice and re-click themselves.
+async function getCaptchaToken() {
+  const first = await getCaptchaTokenOnce();
+  if (first) return first;
+  await new Promise((r) => setTimeout(r, 600));
+  return getCaptchaTokenOnce();
+}
+
 const loadingEl = document.getElementById("loading");
 let loadingResolved = false;
 
@@ -508,6 +846,41 @@ let map, allFeatures = [], userMarker = null;
 
       const SHELTER_MINZOOM = 6;
 
+      map.addSource("nearest-lines", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({
+        id: "nearest-lines-glow",
+        type: "line",
+        source: "nearest-lines",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#ff2d2d", "line-width": 8, "line-blur": 6, "line-opacity": 0.35 }
+      });
+      map.addLayer({
+        id: "nearest-lines",
+        type: "line",
+        source: "nearest-lines",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#ff3b3b", "line-width": 2.4, "line-opacity": 0.95 }
+      });
+
+      map.addSource("nearest-points", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({
+        id: "nearest-points-pulse",
+        type: "circle",
+        source: "nearest-points",
+        paint: { "circle-radius": 14, "circle-color": "#ff3b3b", "circle-opacity": 0.25 }
+      });
+      map.addLayer({
+        id: "nearest-points",
+        type: "circle",
+        source: "nearest-points",
+        paint: {
+          "circle-radius": 6,
+          "circle-color": "#ff3b3b",
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#ffffff"
+        }
+      });
+
       map.addLayer({
       id: "clusters",
       type: "circle",
@@ -567,7 +940,7 @@ let map, allFeatures = [], userMarker = null;
 
       map.on("click", "shelter-icons", (e) => {
         const f = e.features[0];
-        openPanel(f.properties, f.geometry.coordinates);
+        openPanel(f.properties, f.geometry.coordinates, findRouteForClickedFeature(f));
       });
 
       map.on("mouseenter", "clusters", () => map.getCanvas().style.cursor = "pointer");
@@ -594,16 +967,409 @@ function updateVisibleCount(){
   const clusters = map.queryRenderedFeatures({ layers: ["clusters"] });
   let clustered = 0;
   clusters.forEach(c => clustered += c.properties.point_count);
-  document.getElementById("visibleCount").textContent = (pts.length + clustered).toLocaleString("sv-SE");
+  document.getElementById("visibleCount").textContent = pts.length + clustered;
 }
 
-function openPanel(props, coords){
+function round5(n) { return Math.round(n * 1e5) / 1e5; }
+
+function findRouteForClickedFeature(f) {
+  if (!currentNearest || !currentRoutes) return null;
+  const [flng, flat] = f.geometry.coordinates;
+  const idx = currentNearest.findIndex((ci) => {
+    const [clng, clat] = ci.feature.geometry.coordinates;
+    return round5(clng) === round5(flng) && round5(clat) === round5(flat);
+  });
+  return idx >= 0 ? currentRoutes[idx] : null;
+}
+
+function renderPanelSteps(route) {
+  const el = document.getElementById("panelSteps");
+  if (!route || !route.steps || !route.steps.length) {
+    el.classList.remove("show");
+    el.innerHTML = "";
+    return;
+  }
+  el.innerHTML = `<div class="panel-steps-label">Route</div>` + route.steps.map((s) => `
+    <div class="panel-step">
+      <div class="panel-step-badge ${s.mode === "transit" ? "transit" : ""}">${s.mode === "walk" ? "Walk" : s.mode === "transfer" ? "Switch" : "Ride"}</div>
+      <div class="panel-step-text">
+        <div class="panel-step-label">${s.label}</div>
+        ${s.detail ? `<div class="panel-step-detail">${s.detail}</div>` : ""}
+      </div>
+    </div>
+  `).join("");
+  el.classList.add("show");
+}
+
+// --- Live shelter check-in (Supabase) -------------------------------
+// See supabase/schema.sql for the security model. Short version: every
+// browser gets a real, server-issued anonymous identity (auth.uid()); the
+// database — not this client code — enforces one active check-in per
+// identity and that nobody can edit anyone else's row.
+
+let myUserId = null;
+let myActiveCheckin = null;
+let occupancyChannel = null;
+let panelShelterId = null;
+let panelShelterCapacity = null; // last known real capacity for panelShelterId — re-renders after check-in/out pass null and reuse this instead of losing it
+
+// Only creates a NEW anonymous identity (the captcha-gated step) if none
+// exists yet — an existing session is picked up for free, so returning
+// visitors never see a captcha, only the moment someone first checks in.
+async function ensureAnonymousSession() {
+  if (!supabaseClient) return null;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) return session.user.id;
+  const captchaToken = await getCaptchaToken();
+  const { data, error } = await supabaseClient.auth.signInAnonymously(
+    captchaToken ? { options: { captchaToken } } : undefined
+  );
+  if (error) { console.warn("Anonymous sign-in failed", error); return null; }
+  return data.user.id;
+}
+
+async function refreshMyActiveCheckin() {
+  if (!supabaseClient || !myUserId) { myActiveCheckin = null; return; }
+  const { data } = await supabaseClient
+    .from("checkins")
+    .select("shelter_id")
+    .eq("user_id", myUserId)
+    .is("checked_out_at", null)
+    .maybeSingle();
+  myActiveCheckin = data || null;
+}
+
+async function fetchShelterStatus(shelterId) {
+  if (!supabaseClient) return null;
+  const { data, error } = await supabaseClient
+    .from("shelter_status")
+    .select("*")
+    .eq("shelter_id", shelterId)
+    .maybeSingle();
+  if (error) console.warn("fetchShelterStatus failed", error);
+  return data || {
+    shelter_id: shelterId, checkin_count: 0, current_occupancy: 0, adults_count: 0, children_count: 0,
+    special_needs_count: 0, medical_count: 0, leadership_count: 0, technical_count: 0,
+    community_count: 0, volunteer_count: 0,
+    water_none_count: 0, water_1_3l_count: 0, water_4l_plus_count: 0,
+    food_none_count: 0, food_1day_count: 0, food_2plus_count: 0,
+    power_bank_count: 0, first_aid_kit_count: 0, radio_count: 0, flashlight_count: 0
+  };
+}
+
+async function fetchShelterActivity(shelterId) {
+  if (!supabaseClient) return [];
+  const { data, error } = await supabaseClient
+    .from("shelter_activity")
+    .select("checked_in_at, people_count")
+    .eq("shelter_id", shelterId)
+    .order("checked_in_at", { ascending: false })
+    .limit(50);
+  if (error) { console.warn("fetchShelterActivity failed", error); return []; }
+  return data || [];
+}
+
+function subscribeOccupancy(shelterId) {
+  if (occupancyChannel) { supabaseClient.removeChannel(occupancyChannel); occupancyChannel = null; }
+  if (!supabaseClient) return;
+  occupancyChannel = supabaseClient
+    .channel("checkins-" + shelterId)
+    .on("postgres_changes",
+      { event: "*", schema: "public", table: "checkins", filter: `shelter_id=eq.${shelterId}` },
+      async () => {
+        if (panelShelterId !== shelterId) return;
+        renderDashboard(await fetchShelterStatus(shelterId));
+        renderActivity(await fetchShelterActivity(shelterId));
+      })
+    .subscribe();
+}
+
+function formatRelativeTime(iso) {
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  return `${hrs} hour${hrs > 1 ? "s" : ""} ago`;
+}
+
+// Low/Moderate/Good based on the share of check-ins (parties, not people)
+// reporting none vs. plenty of a shared resource — a simple, readable
+// stand-in for "does this shelter currently lack this," not a precise
+// per-person consumption estimate.
+function resourceLevel(noneCount, midCount, goodCount) {
+  const total = noneCount + midCount + goodCount;
+  if (total === 0) return { label: "No data yet", cls: "" };
+  if (noneCount / total >= 0.5) return { label: "Low", cls: "level-red" };
+  if (goodCount / total >= 0.5) return { label: "Good", cls: "level-green" };
+  return { label: "Moderate", cls: "level-orange" };
+}
+
+function dashRow(label, value, cls) {
+  return `<div class="dash-row"><span class="dash-row-label">${label}</span><span class="dash-row-value${cls ? " " + cls : ""}">${value}</span></div>`;
+}
+
+function renderOccupancyHero(status, capacity) {
+  document.getElementById("occCurrent").textContent = status.current_occupancy;
+  document.getElementById("occCapacity").textContent = capacity != null ? capacity : "–";
+  const pctEl = document.getElementById("occPct");
+  const barEl = document.getElementById("occBarFill");
+  barEl.classList.remove("level-orange", "level-red");
+  if (capacity != null && capacity > 0) {
+    const pct = status.current_occupancy / capacity;
+    pctEl.textContent = `${Math.round(pct * 100)}% full`;
+    barEl.style.width = Math.min(pct, 1) * 100 + "%";
+    if (pct >= 1) barEl.classList.add("level-red");
+    else if (pct >= 0.7) barEl.classList.add("level-orange");
+  } else {
+    pctEl.textContent = "";
+    barEl.style.width = "0%";
+  }
+}
+
+function renderNeeds(status) {
+  const water = resourceLevel(status.water_none_count, status.water_1_3l_count, status.water_4l_plus_count);
+  const food = resourceLevel(status.food_none_count, status.food_1day_count, status.food_2plus_count);
+  const medicalCls = status.medical_count > 0 ? "level-green" : "level-red";
+  document.getElementById("needsRows").innerHTML =
+    dashRow("Water", water.label, water.cls) +
+    dashRow("Food", food.label, food.cls) +
+    dashRow("Medical staff", status.medical_count > 0 ? `${status.medical_count} available` : "None available", medicalCls);
+}
+
+function renderPeopleSkills(status) {
+  document.getElementById("peopleRows").innerHTML =
+    dashRow("Adults", status.adults_count) +
+    dashRow("Children", status.children_count) +
+    dashRow("Medical", status.medical_count) +
+    dashRow("Leadership", status.leadership_count) +
+    dashRow("Technical", status.technical_count) +
+    dashRow("Community", status.community_count) +
+    dashRow("Volunteers", status.volunteer_count) +
+    dashRow("Special needs", status.special_needs_count, status.special_needs_count > 0 ? "level-orange" : "");
+}
+
+// Point estimates from the categorical brought-amounts (we only collect
+// buckets, not exact quantities): "none" contributes 0, "1-3l" counts as 2L,
+// "4l_plus" counts as a conservative 4L floor since it's open-ended above.
+// Same idea for food, in days-of-supply rather than liters.
+function renderResources(status) {
+  const totalLiters = status.water_1_3l_count * 2 + status.water_4l_plus_count * 4;
+  const totalFoodDays = status.food_1day_count * 1 + status.food_2plus_count * 2;
+  document.getElementById("resourceRows").innerHTML =
+    dashRow("Water", `≈ ${totalLiters} L total`) +
+    dashRow("Food", `≈ ${totalFoodDays} days total`) +
+    dashRow("Power banks", status.power_bank_count) +
+    dashRow("First aid kits", status.first_aid_kit_count) +
+    dashRow("Radios", status.radio_count) +
+    dashRow("Flashlights", status.flashlight_count);
+}
+
+function renderDashboard(status) {
+  renderOccupancyHero(status, panelShelterCapacity);
+  renderNeeds(status);
+  renderPeopleSkills(status);
+  renderResources(status);
+}
+
+// Groups raw check-in events into rolling time buckets (default-open events
+// close to each other in time collapse into one line, e.g. a batch of
+// arrivals an hour ago reads as one entry, not fifty) — aggregate, no
+// individual attribution, matching the "no per-person data" direction.
+function bucketActivity(events, bucketMinutes) {
+  const bucketMs = bucketMinutes * 60 * 1000;
+  const buckets = [];
+  let current = null;
+  events.forEach((e) => {
+    const t = new Date(e.checked_in_at).getTime();
+    if (current && current.latestT - t < bucketMs) {
+      current.people += e.people_count;
+      current.latestT = Math.max(current.latestT, t);
+    } else {
+      current = { latestT: t, people: e.people_count };
+      buckets.push(current);
+    }
+  });
+  return buckets;
+}
+
+function renderActivity(events) {
+  const el = document.getElementById("activityRows");
+  if (!events.length) {
+    el.innerHTML = `<div class="dash-empty">No activity yet.</div>`;
+    return;
+  }
+  const buckets = bucketActivity(events, 10).slice(0, 6);
+  el.innerHTML = buckets.map((b) => `
+    <div class="activity-row">
+      <span class="activity-time">${formatRelativeTime(new Date(b.latestT).toISOString())}</span>
+      <span>${b.people} ${b.people === 1 ? "person" : "people"} checked in</span>
+    </div>
+  `).join("");
+}
+
+async function renderCheckinSection(shelterId, capacity) {
+  panelShelterId = shelterId;
+  if (capacity != null) panelShelterCapacity = capacity;
+  const section = document.getElementById("panelCheckin");
+  if (!supabaseClient) {
+    section.innerHTML = `<div class="checkin-disabled">Live check-in isn't configured yet.</div>`;
+    return;
+  }
+
+  const [status, activity] = await Promise.all([
+    fetchShelterStatus(shelterId),
+    fetchShelterActivity(shelterId)
+  ]);
+  renderDashboard(status);
+  renderActivity(activity);
+  subscribeOccupancy(shelterId);
+
+  await refreshMyActiveCheckin();
+  document.getElementById("checkinError").textContent = "";
+  const form = document.getElementById("checkinForm");
+  const active = document.getElementById("checkinActive");
+  const elsewhere = document.getElementById("checkinElsewhere");
+  form.style.display = "none"; active.style.display = "none"; elsewhere.style.display = "none";
+
+  const isMember = myActiveCheckin && myActiveCheckin.shelter_id === shelterId;
+  if (isMember) {
+    active.style.display = "";
+  } else if (myActiveCheckin) {
+    elsewhere.style.display = "block";
+  } else {
+    form.style.display = "block";
+  }
+}
+
+// --- Check-in questionnaire modal ------------------------------------
+
+function resetCheckinModal() {
+  document.getElementById("ciAdults").value = "1";
+  document.getElementById("ciChildren").value = "0";
+  document.querySelectorAll("#ciSpecialNeedsToggle .toggle-btn").forEach((b) => b.classList.toggle("active", b.dataset.value === "false"));
+  document.querySelectorAll(".ci-role, .ci-equip").forEach((cb) => { cb.checked = false; });
+  document.getElementById("ciWater").value = "none";
+  document.getElementById("ciFood").value = "none";
+  document.getElementById("checkinModalError").textContent = "";
+}
+
+function openCheckinModal() {
+  resetCheckinModal();
+  document.getElementById("checkinModalOverlay").classList.add("show");
+}
+
+function closeCheckinModal() {
+  document.getElementById("checkinModalOverlay").classList.remove("show");
+}
+
+document.querySelectorAll("#ciSpecialNeedsToggle .toggle-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#ciSpecialNeedsToggle .toggle-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+  });
+});
+
+document.getElementById("checkinModalClose").addEventListener("click", closeCheckinModal);
+document.getElementById("checkinModalCancel").addEventListener("click", closeCheckinModal);
+document.getElementById("checkinModalOverlay").addEventListener("click", (e) => {
+  if (e.target.id === "checkinModalOverlay") closeCheckinModal();
+});
+
+document.getElementById("checkinBtn").addEventListener("click", () => {
+  if (!supabaseClient || !panelShelterId) return;
+  openCheckinModal();
+});
+
+document.getElementById("checkinModalSubmit").addEventListener("click", async () => {
+  if (!supabaseClient || !panelShelterId) return;
+  const btn = document.getElementById("checkinModalSubmit");
+  const errEl = document.getElementById("checkinModalError");
+  errEl.textContent = "";
+
+  const adults = parseInt(document.getElementById("ciAdults").value, 10);
+  const children = parseInt(document.getElementById("ciChildren").value, 10);
+  if (!Number.isFinite(adults) || adults < 1) { errEl.textContent = "Adults must be at least 1."; return; }
+  if (!Number.isFinite(children) || children < 0) { errEl.textContent = "Children can't be negative."; return; }
+
+  const specialNeeds = document.querySelector('#ciSpecialNeedsToggle .toggle-btn.active').dataset.value === "true";
+  const roles = [...document.querySelectorAll(".ci-role:checked")].map((cb) => cb.value);
+  const equipment = [...document.querySelectorAll(".ci-equip:checked")].map((cb) => cb.value);
+  const waterBrought = document.getElementById("ciWater").value;
+  const foodBrought = document.getElementById("ciFood").value;
+
+  btn.disabled = true;
+  if (!myUserId) myUserId = await ensureAnonymousSession();
+  if (!myUserId) {
+    btn.disabled = false;
+    errEl.textContent = "Couldn't verify you're not a bot (captcha/network issue) — try again.";
+    return;
+  }
+
+  const { data: inserted, error } = await supabaseClient
+    .from("checkins")
+    .insert({ shelter_id: panelShelterId, user_id: myUserId })
+    .select("id")
+    .single();
+  if (error) {
+    btn.disabled = false;
+    console.warn("Check-in failed", error);
+    errEl.textContent = "Check-in failed: " + error.message;
+    return;
+  }
+
+  const { error: detailsError } = await supabaseClient.from("checkin_details").insert({
+    checkin_id: inserted.id,
+    adults, children, special_needs: specialNeeds, roles,
+    water_brought: waterBrought, food_brought: foodBrought, equipment
+  });
+  btn.disabled = false;
+  if (detailsError) {
+    console.warn("Saving check-in details failed", detailsError);
+    errEl.textContent = "Checked in, but saving your info failed: " + detailsError.message;
+    return;
+  }
+  closeCheckinModal();
+  await renderCheckinSection(panelShelterId, null);
+});
+// ----------------------------------------------------------------------
+
+document.getElementById("checkoutBtn").addEventListener("click", async () => {
+  if (!supabaseClient || !myUserId) return;
+  const btn = document.getElementById("checkoutBtn");
+  const errEl = document.getElementById("checkinError");
+  errEl.textContent = "";
+  btn.disabled = true;
+  const { error } = await supabaseClient
+    .from("checkins")
+    .update({ checked_out_at: new Date().toISOString() })
+    .eq("user_id", myUserId)
+    .is("checked_out_at", null);
+  btn.disabled = false;
+  if (error) { console.warn("Check-out failed", error); errEl.textContent = "Check-out failed: " + error.message; return; }
+  await renderCheckinSection(panelShelterId, null);
+});
+
+// Only picks up an EXISTING session on load (no captcha involved in just
+// reading local session state) — a brand new identity is only ever created
+// lazily, the moment someone actually clicks "check in".
+if (supabaseClient) {
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (session) myUserId = session.user.id;
+  });
+}
+// ----------------------------------------------------------------------
+
+function openPanel(props, coords, route){
   document.getElementById("panelAddress").textContent = props.address || "Adress saknas";
   document.getElementById("panelMuni").textContent = props.municipality || "";
   document.getElementById("panelMuni2").textContent = props.municipality || "—";
   document.getElementById("panelCapacity").textContent = props.capacity ? props.capacity.toLocaleString("sv-SE") : "—";
-  document.getElementById("directionsBtn").href =
+  document.getElementById("googleMapsBtn").href =
     `https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`;
+  document.getElementById("appleMapsBtn").href =
+    `https://maps.apple.com/?daddr=${coords[1]},${coords[0]}&dirflg=d`;
+  renderPanelSteps(route);
+  if (props.id) renderCheckinSection(props.id, props.capacity);
   document.getElementById("panel").classList.add("open");
 }
 document.getElementById("panelClose").addEventListener("click", () => {
@@ -612,47 +1378,572 @@ document.getElementById("panelClose").addEventListener("click", () => {
 
 const searchInput = document.getElementById("search");
 const searchResults = document.getElementById("searchResults");
+let searchDebounceTimer = null;
+let searchRequestId = 0;
+
+// Nominatim (OpenStreetMap's free geocoder) — usage policy caps this at
+// ~1 request/sec and expects an identifying Referer, which the browser
+// sends automatically. Fine for prototyping; not for heavy production
+// traffic, same caveat as the OSRM mirrors used elsewhere in this app.
+async function geocodeAddress(query) {
+  const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=se&limit=6&q=${encodeURIComponent(query)}`;
+  try {
+    const res = await fetch(url, { headers: { "Accept-Language": "sv" } });
+    if (!res.ok) throw new Error("geocoding request failed");
+    const data = await res.json();
+    return data.map((d) => ({ label: d.display_name, coords: [parseFloat(d.lon), parseFloat(d.lat)] }));
+  } catch (err) {
+    console.warn("Address search failed", err);
+    return [];
+  }
+}
+
+function renderSearchResults(shelterMatches, addressMatches) {
+  if (!shelterMatches.length && !addressMatches.length) {
+    searchResults.innerHTML = `<div class="search-result-item" style="color:var(--text-faint)">No matches</div>`;
+    searchResults.classList.add("show");
+    return;
+  }
+  const shelterHtml = shelterMatches.map((f, i) => `
+    <div class="search-result-item" data-type="shelter" data-idx="${i}">
+      <span class="result-tag">SHELTER</span>${f.properties.address}
+      <div class="muni">${f.properties.municipality} · ${f.properties.capacity} spaces</div>
+    </div>
+  `).join("");
+  const addressHtml = addressMatches.map((a, i) => `
+    <div class="search-result-item" data-type="address" data-idx="${i}">
+      <span class="result-tag address">ADDRESS</span>${a.label}
+    </div>
+  `).join("");
+  searchResults.innerHTML = shelterHtml + addressHtml;
+
+  [...searchResults.querySelectorAll('.search-result-item[data-type="shelter"]')].forEach((el, i) => {
+    el.addEventListener("click", () => {
+      const f = shelterMatches[i];
+      map.flyTo({ center: f.geometry.coordinates, zoom: 16 });
+      openPanel(f.properties, f.geometry.coordinates);
+      searchResults.classList.remove("show");
+      searchInput.value = f.properties.address;
+    });
+  });
+  [...searchResults.querySelectorAll('.search-result-item[data-type="address"]')].forEach((el, i) => {
+    el.addEventListener("click", () => {
+      const a = addressMatches[i];
+      map.flyTo({ center: a.coords, zoom: 16 });
+      searchResults.classList.remove("show");
+      searchInput.value = a.label;
+    });
+  });
+  searchResults.classList.add("show");
+}
 
 searchInput.addEventListener("input", () => {
-  const q = searchInput.value.trim().toLowerCase();
-  if (q.length < 2){ searchResults.classList.remove("show"); return; }
+  const q = searchInput.value.trim();
+  clearTimeout(searchDebounceTimer);
+  if (q.length < 2) { searchResults.classList.remove("show"); return; }
 
-  const matches = allFeatures.filter(f =>
-    (f.properties.address || "").toLowerCase().includes(q) ||
-    (f.properties.municipality || "").toLowerCase().includes(q)
-  ).slice(0, 20);
+  const qLower = q.toLowerCase();
+  const shelterMatches = allFeatures.filter((f) =>
+    (f.properties.address || "").toLowerCase().includes(qLower) ||
+    (f.properties.municipality || "").toLowerCase().includes(qLower)
+  ).slice(0, 8);
 
-  if (matches.length === 0){
-    searchResults.innerHTML = `<div class="search-result-item" style="color:var(--text-faint)">No matches</div>`;
-  } else {
-    searchResults.innerHTML = matches.map((f,i) => `
-      <div class="search-result-item" data-idx="${i}">
-        ${f.properties.address}
-        <div class="muni">${f.properties.municipality} · ${f.properties.capacity} spaces</div>
-      </div>
-    `).join("");
-    [...searchResults.querySelectorAll(".search-result-item")].forEach((el, i) => {
-      el.addEventListener("click", () => {
-        const f = matches[i];
-        map.flyTo({ center: f.geometry.coordinates, zoom: 16 });
-        openPanel(f.properties, f.geometry.coordinates);
-        searchResults.classList.remove("show");
-        searchInput.value = f.properties.address;
-      });
-    });
-  }
-  searchResults.classList.add("show");
+  // Shelter matches show immediately (local, instant); geocoded real
+  // addresses arrive a beat later and get merged in.
+  renderSearchResults(shelterMatches, []);
+
+  const myRequestId = ++searchRequestId;
+  searchDebounceTimer = setTimeout(async () => {
+    const addressMatches = await geocodeAddress(q);
+    if (myRequestId !== searchRequestId) return; // superseded by newer input
+    renderSearchResults(shelterMatches, addressMatches);
+  }, 400);
 });
 document.addEventListener("click", (e) => {
   if (!e.target.closest(".searchwrap")) searchResults.classList.remove("show");
 });
 
+function haversineKm(a, b) {
+  const R = 6371;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(b[1] - a[1]);
+  const dLng = toRad(b[0] - a[0]);
+  const lat1 = toRad(a[1]);
+  const lat2 = toRad(b[1]);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function findNearestShelters(userCoord, n) {
+  return allFeatures
+    .map((f) => ({ feature: f, distance: haversineKm(userCoord, f.geometry.coordinates) }))
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, n);
+}
+
+function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
+
+function lineLengthKm(coords) {
+  let total = 0;
+  for (let i = 1; i < coords.length; i++) total += haversineKm(coords[i - 1], coords[i]);
+  return total;
+}
+
+function slicePartialLine(coords, fraction) {
+  if (fraction <= 0) return [coords[0]];
+  if (fraction >= 1) return coords;
+  const total = lineLengthKm(coords);
+  const target = total * fraction;
+  let acc = 0;
+  const out = [coords[0]];
+  for (let i = 1; i < coords.length; i++) {
+    const segLen = haversineKm(coords[i - 1], coords[i]);
+    if (acc + segLen >= target) {
+      const segFrac = segLen === 0 ? 0 : (target - acc) / segLen;
+      out.push([
+        coords[i - 1][0] + (coords[i][0] - coords[i - 1][0]) * segFrac,
+        coords[i - 1][1] + (coords[i][1] - coords[i - 1][1]) * segFrac
+      ]);
+      return out;
+    }
+    out.push(coords[i]);
+    acc += segLen;
+  }
+  return coords;
+}
+
+// Public OSRM demo mirrors (routing.openstreetmap.de) — fine for prototyping,
+// not rate-limit-safe for production traffic. Swap for a paid/self-hosted
+// router before shipping this for real.
+const OSRM_BASE = {
+  walking: "https://routing.openstreetmap.de/routed-foot",
+  cycling: "https://routing.openstreetmap.de/routed-bike",
+  driving: "https://routing.openstreetmap.de/routed-car"
+};
+const OSRM_PROFILE = { walking: "foot", cycling: "bike", driving: "driving" };
+
+function parseIsoDurationMin(iso) {
+  const m = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso || "");
+  if (!m) return null;
+  const h = parseInt(m[1] || 0, 10), min = parseInt(m[2] || 0, 10), s = parseInt(m[3] || 0, 10);
+  return h * 60 + min + s / 60;
+}
+
+function clockFromResRobotTime(hhmmss) {
+  return hhmmss ? hhmmss.slice(0, 5) : "";
+}
+
+function buildTransitSteps(legs) {
+  return legs.map((leg) => {
+    const origin = leg.Origin || {};
+    const dest = leg.Destination || {};
+    const dep = clockFromResRobotTime(origin.time);
+    const arr = clockFromResRobotTime(dest.time);
+    const times = dep && arr ? `${dep} → ${arr}` : "";
+    if (leg.type === "WALK") {
+      return { mode: "walk", label: `Walk to ${dest.name || "next stop"}`, detail: times };
+    }
+    if (leg.type === "TRSF") {
+      return { mode: "transfer", label: `Change at ${origin.name || ""}`, detail: times };
+    }
+    const product = leg.Product && leg.Product[0];
+    const lineName = product ? (product.catOutS || product.catOutL || product.name || "") : "Transit";
+    const lineNum = product && (product.line || product.num) ? " " + (product.line || product.num) : "";
+    const towards = leg.direction ? ` towards ${leg.direction}` : "";
+    return {
+      mode: "transit",
+      label: `${lineName}${lineNum}${towards}`,
+      detail: `${origin.name || ""} ${dep} → ${dest.name || ""} ${arr}`
+    };
+  });
+}
+
+async function fetchTransitRoute(start, end) {
+  if (!TRAFIKLAB_API_KEY) {
+    return {
+      coords: [start, end], distanceKm: haversineKm(start, end), durationMin: null,
+      approx: true, note: "add a Trafiklab API key to enable", steps: null
+    };
+  }
+  const url = "https://api.resrobot.se/v2.1/trip"
+    + `?format=json&accessId=${encodeURIComponent(TRAFIKLAB_API_KEY)}`
+    + `&originCoordLat=${start[1]}&originCoordLong=${start[0]}`
+    + `&destCoordLat=${end[1]}&destCoordLong=${end[0]}`
+    + "&passlist=1&numF=1";
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("ResRobot request failed");
+    const data = await res.json();
+    const trip = data.Trip && data.Trip[0];
+    const legs = trip && trip.LegList && trip.LegList.Leg;
+    if (!legs || !legs.length) throw new Error("no trip returned");
+    const coords = [];
+    let distanceKm = 0;
+    legs.forEach((leg) => {
+      const stops = leg.Stops && leg.Stops.Stop && leg.Stops.Stop.length
+        ? leg.Stops.Stop.map((s) => [parseFloat(s.lon), parseFloat(s.lat)])
+        : [[parseFloat(leg.Origin.lon), parseFloat(leg.Origin.lat)], [parseFloat(leg.Destination.lon), parseFloat(leg.Destination.lat)]];
+      for (let i = 1; i < stops.length; i++) distanceKm += haversineKm(stops[i - 1], stops[i]);
+      coords.push(...stops);
+    });
+    return { coords, distanceKm, durationMin: parseIsoDurationMin(trip.duration), approx: false, steps: buildTransitSteps(legs) };
+  } catch (err) {
+    console.warn("Transit routing failed, falling back to a direct line.", err);
+    return { coords: [start, end], distanceKm: haversineKm(start, end), durationMin: null, approx: true, note: "transit routing failed", steps: null };
+  }
+}
+
+async function fetchRoute(mode, start, end) {
+  if (mode === "transit") return fetchTransitRoute(start, end);
+  const url = `${OSRM_BASE[mode]}/route/v1/${OSRM_PROFILE[mode]}/${start[0]},${start[1]};${end[0]},${end[1]}?overview=full&geometries=geojson`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("routing request failed");
+    const data = await res.json();
+    if (!data.routes || !data.routes.length) throw new Error("no route returned");
+    const route = data.routes[0];
+    return {
+      coords: route.geometry.coordinates,
+      distanceKm: route.distance / 1000,
+      durationMin: route.duration / 60,
+      approx: false,
+      steps: null
+    };
+  } catch (err) {
+    console.warn(`Routing failed for mode "${mode}", falling back to a direct line.`, err);
+    return { coords: [start, end], distanceKm: haversineKm(start, end), durationMin: null, approx: true, steps: null };
+  }
+}
+
+// Real travel TIME from one origin to many destinations in a single request
+// (OSRM's Table service), instead of routing candidates one at a time. This
+// is what lets the initial ranking pass consider a much wider pool of
+// shelters than routing each one individually would afford — no more
+// picking only from the 8 closest as-the-crow-flies before ranking by real
+// time; the wider pool itself is now ranked by real time.
+async function fetchTravelMatrix(mode, start, candidates) {
+  const base = OSRM_BASE[mode];
+  if (!base || !candidates.length) return null;
+  const coordStr = [start, ...candidates].map((c) => c[0] + "," + c[1]).join(";");
+  const destIdx = candidates.map((_, i) => i + 1).join(";");
+  const url = `${base}/table/v1/${OSRM_PROFILE[mode]}/${coordStr}?sources=0&destinations=${destIdx}&annotations=duration,distance`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("matrix request failed");
+    const data = await res.json();
+    const durations = data.durations && data.durations[0];
+    if (!durations) throw new Error("no matrix data");
+    const distances = data.distances && data.distances[0];
+    return candidates.map((_, i) => ({
+      durationMin: durations[i] != null ? durations[i] / 60 : null,
+      distanceKm: distances && distances[i] != null ? distances[i] / 1000 : null
+    }));
+  } catch (err) {
+    console.warn(`Matrix routing failed for ${mode}, falling back to straight-line ranking for this pass.`, err);
+    return null;
+  }
+}
+
+async function fetchShelterStatusMap(shelterIds) {
+  if (!supabaseClient || !shelterIds.length) return new Map();
+  const { data, error } = await supabaseClient
+    .from("shelter_status")
+    .select("shelter_id, current_occupancy")
+    .in("shelter_id", shelterIds);
+  if (error) { console.warn("fetchShelterStatusMap failed", error); return new Map(); }
+  return new Map((data || []).map((r) => [r.shelter_id, r.current_occupancy]));
+}
+
+// Candidates beyond however many we actually checked default to "not full"
+// (occupancyMap has no entry for them) — safe, since we simply don't know
+// their status rather than wrongly assuming the worst.
+function isShelterFull(item, occupancyMap) {
+  const capacity = item.feature.properties.capacity;
+  if (!capacity) return false;
+  const occ = occupancyMap.get(item.feature.properties.id) || 0;
+  return occ >= capacity;
+}
+
+// How a route is ranked when picking the "best" 3 shelters: real trip time
+// when we have it, otherwise a rough minutes-per-km estimate so a failed
+// lookup doesn't just sort to the top or bottom by accident.
+function routeRankMinutes(route) {
+  return route.durationMin != null ? route.durationMin : route.distanceKm * 15;
+}
+
+// Runs `fn` over `items` with at most `limit` in flight at once — keeps us
+// from hammering the public OSRM/ResRobot endpoints with a burst of requests
+// every time someone switches travel mode.
+async function mapWithConcurrency(items, limit, fn) {
+  const results = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i], i);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
+const DEFAULT_ZOOM = 4.4;
+const MATRIX_CANDIDATE_COUNT = 30; // wide straight-line net, ranked by one real-time matrix call
+const TRANSIT_CANDIDATE_COUNT = 8; // no matrix endpoint for transit — routed individually, so kept smaller
+
+let nearestAnimReq = null;
+let locateActive = false;
+let lastUserCoord = null;
+let currentNearest = null;    // top 3 by real travel time (and live capacity), for the active mode
+let currentRoutes = null;     // routes matching currentNearest, same order
+let currentTransportMode = "walking";
+const routeCache = {};
+const matrixCache = {};
+
+// ~11m precision — same locate click (or GPS jitter) reuses the cache;
+// an actually different location gets a fresh key. Keying by shelter id
+// alone (the old behavior) was a real bug: relocating far away would have
+// silently reused routes computed from the previous location.
+function originKeyFor(coord) {
+  return coord[0].toFixed(4) + "," + coord[1].toFixed(4);
+}
+
+function animateRoutesToShelters(routes) {
+  if (nearestAnimReq) cancelAnimationFrame(nearestAnimReq);
+  const duration = 650;
+  const stagger = 100;
+  const start = performance.now();
+
+  function frame(now) {
+    const lineFeatures = [];
+    let stillAnimating = false;
+    routes.forEach((route, i) => {
+      const localStart = start + i * stagger;
+      let t = (now - localStart) / duration;
+      if (t < 0) t = 0;
+      if (t > 1) t = 1; else stillAnimating = true;
+      const eased = easeOutCubic(t);
+      lineFeatures.push({
+        type: "Feature",
+        properties: { rank: i + 1 },
+        geometry: { type: "LineString", coordinates: slicePartialLine(route.coords, eased) }
+      });
+    });
+    map.getSource("nearest-lines").setData({ type: "FeatureCollection", features: lineFeatures });
+
+    if (stillAnimating) {
+      nearestAnimReq = requestAnimationFrame(frame);
+    } else {
+      nearestAnimReq = null;
+    }
+  }
+  nearestAnimReq = requestAnimationFrame(frame);
+
+  map.getSource("nearest-points").setData({
+    type: "FeatureCollection",
+    features: currentNearest.map((item, i) => ({
+      type: "Feature",
+      properties: { rank: i + 1, ...item.feature.properties },
+      geometry: item.feature.geometry
+    }))
+  });
+}
+
+function renderNearestList(routes, fullSkippedCount) {
+  const panel = document.getElementById("nearestPanel");
+  const skipNote = fullSkippedCount > 0
+    ? `<div class="nearest-note">${fullSkippedCount} nearer shelter${fullSkippedCount > 1 ? "s" : ""} skipped — at capacity</div>`
+    : "";
+  panel.innerHTML = skipNote + currentNearest.map((item, i) => {
+    const r = routes[i];
+    const timeStr = r.durationMin != null ? `${Math.max(1, Math.round(r.durationMin))} min` : "";
+    const note = r.note ? ` · ${r.note}` : (r.approx ? " · direct line" : "");
+    return `
+    <div class="nearest-item" style="animation-delay:${i * 90}ms" data-idx="${i}">
+      <div class="nearest-rank">${i + 1}</div>
+      <div class="nearest-info">
+        <div class="nearest-addr">${item.feature.properties.address || "Skyddsrum"}</div>
+        <div class="nearest-dist">${r.distanceKm.toFixed(2)} km${timeStr ? " · " + timeStr : ""}${note}</div>
+      </div>
+    </div>`;
+  }).join("");
+  [...panel.querySelectorAll(".nearest-item")].forEach((el, i) => {
+    el.addEventListener("click", () => {
+      const item = currentNearest[i];
+      map.flyTo({ center: item.feature.geometry.coordinates, zoom: 16 });
+      openPanel(item.feature.properties, item.feature.geometry.coordinates, routes[i]);
+    });
+  });
+}
+
+function setRoutesLoading(isLoading) {
+  document.getElementById("modeBar").classList.toggle("routes-loading", isLoading);
+  if (isLoading) {
+    document.getElementById("nearestPanel").innerHTML = `<div class="nearest-loading">Finding the fastest routes…</div>`;
+  }
+}
+
+function updateModeBarUI(mode) {
+  document.querySelectorAll(".mode-btn").forEach((b) => b.classList.toggle("active", b.dataset.mode === mode));
+}
+
+// Ranks a wide straight-line candidate pool (30 for walk/bike/car, via one
+// cached Table-API matrix call; 8 for transit, routed individually since
+// ResRobot has no matrix endpoint) by REAL travel time, skips any that are
+// already full at their live capacity, then shows the ranked list
+// IMMEDIATELY using the matrix's own time/distance numbers — before waiting
+// on full route geometry for the drawn line, which turns out to be the slow
+// part (each OSRM /route call on the free public mirror runs well over
+// 100ms, and requesting several at once doesn't parallelize as cleanly as
+// hoped — see the perf notes below). The line drawing catches up a moment
+// later and the list silently refreshes with exact numbers once it lands.
+//
+// `isPrefetch`: when true, this only warms matrixCache/routeCache in the
+// background (for modes the user hasn't clicked yet) and never touches the
+// UI or `current*` state — see prefetchOtherModes().
+async function loadRoutesForMode(mode, isPrefetch) {
+  if (!lastUserCoord || !allFeatures.length) return;
+  if (!isPrefetch) {
+    currentTransportMode = mode;
+    updateModeBarUI(mode);
+    setRoutesLoading(true);
+  }
+
+  const origin = originKeyFor(lastUserCoord);
+
+  if (mode === "transit") {
+    // No matrix endpoint for transit, so ranking IS routing — there's no
+    // separate "fast estimate" phase possible here, each candidate's real
+    // trip is already in hand by the time we know the ranking.
+    const pool = findNearestShelters(lastUserCoord, TRANSIT_CANDIDATE_COUNT);
+    const [routes, occupancyMap] = await Promise.all([
+      mapWithConcurrency(pool, 4, (item) => {
+        const key = mode + "|" + origin + "|" + item.feature.properties.id;
+        if (!routeCache[key]) routeCache[key] = fetchRoute(mode, lastUserCoord, item.feature.geometry.coordinates);
+        return routeCache[key];
+      }),
+      fetchShelterStatusMap(pool.map((item) => item.feature.properties.id))
+    ]);
+    if (!isPrefetch && mode !== currentTransportMode) return;
+
+    const rankedPool = pool
+      .map((item, i) => ({ item, route: routes[i] }))
+      .sort((a, b) => routeRankMinutes(a.route) - routeRankMinutes(b.route));
+    const available = rankedPool.filter((r) => !isShelterFull(r.item, occupancyMap));
+    const fullSkippedCount = rankedPool.length - available.length;
+    const chosen = (available.length >= 3 ? available : rankedPool).slice(0, 3);
+    if (isPrefetch) return;
+
+    currentNearest = chosen.map((r) => r.item);
+    currentRoutes = chosen.map((r) => r.route);
+    setRoutesLoading(false);
+    animateRoutesToShelters(currentRoutes);
+    renderNearestList(currentRoutes, available.length >= 3 ? fullSkippedCount : 0);
+    return;
+  }
+
+  // Walk/bike/car: the matrix call and the occupancy check are independent
+  // (occupancy only needs shelter ids, not travel times) — start both at
+  // once instead of the occupancy check waiting on the matrix to finish.
+  const wide = findNearestShelters(lastUserCoord, MATRIX_CANDIDATE_COUNT);
+  const mKey = mode + "|" + origin;
+  if (!matrixCache[mKey]) matrixCache[mKey] = fetchTravelMatrix(mode, lastUserCoord, wide.map((item) => item.feature.geometry.coordinates));
+  const [matrix, occupancyMap] = await Promise.all([
+    matrixCache[mKey],
+    fetchShelterStatusMap(wide.map((item) => item.feature.properties.id))
+  ]);
+
+  if (!isPrefetch && mode !== currentTransportMode) return;
+
+  const rankedPool = wide
+    .map((item, i) => {
+      const m = matrix && matrix[i];
+      const time = m && m.durationMin != null ? m.durationMin : haversineKm(lastUserCoord, item.feature.geometry.coordinates) * 15;
+      const distanceKm = m && m.distanceKm != null ? m.distanceKm : haversineKm(lastUserCoord, item.feature.geometry.coordinates);
+      return { item, time, distanceKm };
+    })
+    .sort((a, b) => a.time - b.time);
+
+  const available = rankedPool.filter((r) => !isShelterFull(r.item, occupancyMap));
+  const fullSkippedCount = rankedPool.length - available.length;
+  const chosen = (available.length >= 3 ? available : rankedPool).slice(0, 3);
+  const fetchGeometryFor = (r) => {
+    const key = mode + "|" + origin + "|" + r.item.feature.properties.id;
+    if (!routeCache[key]) routeCache[key] = fetchRoute(mode, lastUserCoord, r.item.feature.geometry.coordinates);
+    return routeCache[key];
+  };
+
+  if (isPrefetch) {
+    await Promise.all(chosen.map(fetchGeometryFor)); // quietly warm the exact-geometry cache too
+    return;
+  }
+  if (mode !== currentTransportMode) return;
+
+  // First paint: real numbers, no line yet (the map just keeps showing
+  // whatever was drawn for the previous mode until the new lines are ready).
+  currentNearest = chosen.map((r) => r.item);
+  const interim = chosen.map((r) => ({ distanceKm: r.distanceKm, durationMin: r.time, approx: false, note: null }));
+  renderNearestList(interim, available.length >= 3 ? fullSkippedCount : 0);
+  setRoutesLoading(false);
+
+  const finalRoutes = await Promise.all(chosen.map(fetchGeometryFor));
+  if (mode !== currentTransportMode) return;
+
+  currentRoutes = finalRoutes;
+  animateRoutesToShelters(finalRoutes);
+  renderNearestList(finalRoutes, available.length >= 3 ? fullSkippedCount : 0);
+}
+
+// Quietly warms the route/matrix caches for the modes the user hasn't
+// clicked yet, right after the first (walking) load finishes — so if they
+// then click Bike or Car, that click just reads from cache instead of
+// starting the whole matrix+routing pipeline from zero. Transit is skipped:
+// it has no matrix endpoint, so "prefetching" it would mean 8 real ResRobot
+// calls on every locate whether or not the user ever opens that tab.
+function prefetchOtherModes(activeMode) {
+  ["walking", "cycling", "driving"].forEach((m) => {
+    if (m === activeMode) return;
+    loadRoutesForMode(m, true).catch((err) => console.warn("Prefetch failed for", m, err));
+  });
+}
+
+function clearNearestVisuals() {
+  if (nearestAnimReq) { cancelAnimationFrame(nearestAnimReq); nearestAnimReq = null; }
+  if (map.getSource("nearest-lines")) map.getSource("nearest-lines").setData({ type: "FeatureCollection", features: [] });
+  if (map.getSource("nearest-points")) map.getSource("nearest-points").setData({ type: "FeatureCollection", features: [] });
+  document.getElementById("nearestPanel").innerHTML = "";
+  document.getElementById("locatePanel").classList.remove("show");
+}
+
+document.querySelectorAll(".mode-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    if (!locateActive || btn.dataset.mode === currentTransportMode) return;
+    loadRoutesForMode(btn.dataset.mode);
+  });
+});
+
 document.getElementById("locateBtn").addEventListener("click", () => {
-  if (!navigator.geolocation) return;
   const btn = document.getElementById("locateBtn");
+
+  if (locateActive) {
+    locateActive = false;
+    btn.classList.remove("active");
+    if (userMarker) { userMarker.remove(); userMarker = null; }
+    clearNearestVisuals();
+    document.getElementById("panel").classList.remove("open");
+    lastUserCoord = null;
+    currentNearest = null;
+    currentRoutes = null;
+    map.easeTo({ zoom: DEFAULT_ZOOM, duration: 800 });
+    return;
+  }
+
+  if (!navigator.geolocation) return;
   btn.classList.add("active");
   navigator.geolocation.getCurrentPosition((pos) => {
     const lngLat = [pos.coords.longitude, pos.coords.latitude];
+    lastUserCoord = lngLat;
+    locateActive = true;
     if (userMarker) userMarker.remove();
     const el = document.createElement("div");
     el.style.width = "14px"; el.style.height = "14px"; el.style.borderRadius = "50%";
@@ -660,7 +1951,14 @@ document.getElementById("locateBtn").addEventListener("click", () => {
     el.style.boxShadow = "0 0 0 5px rgba(247,247,245,0.35)";
     userMarker = new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
     map.flyTo({ center: lngLat, zoom: 14 });
-  }, () => { btn.classList.remove("active"); }, { enableHighAccuracy: true });
+
+    if (allFeatures.length && map.getSource("nearest-lines")) {
+      document.getElementById("locatePanel").classList.add("show");
+      currentTransportMode = "walking";
+      updateModeBarUI("walking");
+      loadRoutesForMode("walking").then(() => prefetchOtherModes("walking"));
+    }
+  }, () => { btn.classList.remove("active"); locateActive = false; }, { enableHighAccuracy: true });
 });
 </script>
 </body>
