@@ -4,28 +4,19 @@
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { admin, anonClient, createFixtures, ROLES, signedIn, type Fixtures, type RoleKey } from './helpers';
+import { admin, ALL_CALLERS, anonClient, createFixtures, ROLES, rows, signInAll, type Caller, type Fixtures, type RoleKey } from './helpers';
 
 let fx: Fixtures;
-const as = {} as Record<RoleKey | 'anon', SupabaseClient>;
+let as: Record<Caller, SupabaseClient>;
 
 beforeAll(async () => {
   fx = await createFixtures();
-  for (const key of ROLES) as[key] = await signedIn(fx.users[key].email, fx.password);
-  as.anon = anonClient();
+  as = await signInAll(fx);
 });
 
 afterAll(async () => {
   await fx?.cleanup();
 });
-
-const ALL_CALLERS = [...ROLES, 'anon'] as const;
-
-/** Rows a caller can read, or [] when the request is refused outright. */
-async function rows<T = Record<string, unknown>>(query: PromiseLike<{ data: T[] | null; error: unknown }>) {
-  const { data } = await query;
-  return data ?? [];
-}
 
 const testShelterIds = () => Object.values(fx.shelters);
 const shelterKey = (id: string) => (Object.keys(fx.shelters) as (keyof Fixtures['shelters'])[]).find((k) => fx.shelters[k] === id);

@@ -27,6 +27,18 @@ export function anonClient(): SupabaseClient {
   return createClient(url, anonKey, clientOptions);
 }
 
+/** Rows a caller can read, or [] when the request is refused outright. */
+export async function rows<T = Record<string, unknown>>(query: PromiseLike<{ data: T[] | null; error: unknown }>) {
+  const { data } = await query;
+  return data ?? [];
+}
+
+export async function accessToken(client: SupabaseClient): Promise<string> {
+  const { data } = await client.auth.getSession();
+  if (!data.session) throw new Error('client is not signed in');
+  return data.session.access_token;
+}
+
 export async function signedIn(email: string, password: string): Promise<SupabaseClient> {
   const client = anonClient();
   const { error } = await client.auth.signInWithPassword({ email, password });
@@ -55,7 +67,17 @@ export const ROLES = [
 ] as const;
 export type RoleKey = (typeof ROLES)[number];
 
+export const ALL_CALLERS = [...ROLES, 'anon'] as const;
+export type Caller = (typeof ALL_CALLERS)[number];
+
 export type Fixtures = Awaited<ReturnType<typeof createFixtures>>;
+
+/** Signed-in clients for every fixture role, plus an anonymous one. */
+export async function signInAll(fx: Fixtures): Promise<Record<Caller, SupabaseClient>> {
+  const clients = { anon: anonClient() } as Record<Caller, SupabaseClient>;
+  for (const key of ROLES) clients[key] = await signedIn(fx.users[key].email, fx.password);
+  return clients;
+}
 
 /**
  * A small world with two owners, two länsstyrelser (Östergötland, Jönköping)

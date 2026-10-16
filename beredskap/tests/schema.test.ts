@@ -70,6 +70,22 @@ describe('database guarantees', () => {
     expect(fns).toEqual([]);
   });
 
+  it('anon cannot execute any function in public', async () => {
+    const fns = await q(`
+      select p.proname from pg_proc p
+      where p.pronamespace = 'public'::regnamespace and has_function_privilege('anon', p.oid, 'EXECUTE')`);
+    expect(fns).toEqual([]);
+  });
+
+  it('the photos bucket is private and only readable through policies', async () => {
+    const [bucket] = await q<{ public: boolean }>(`select public from storage.buckets where id = 'photos'`);
+    expect(bucket.public).toBe(false);
+    const writes = await q(`
+      select policyname, cmd from pg_policies
+      where schemaname = 'storage' and tablename = 'objects' and cmd <> 'SELECT'`);
+    expect(writes).toEqual([]);
+  });
+
   it('anon cannot use the private schema', async () => {
     const [{ ok }] = await q<{ ok: boolean }>(`select has_schema_privilege('anon', 'private', 'USAGE') as ok`);
     expect(ok).toBe(false);
