@@ -1,0 +1,48 @@
+{
+  "app": {
+    "name": "Beredskap",
+    "tagline": "skyddsrum.se for property owners, county boards and municipalities",
+    "demo": "DEMO",
+    "demoNotice": "Demo environment with fictional organisations and statuses."
+  },
+  "login": {
+    "title": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in …",
+    "failed": "Sign-in failed. Check your email and password.",
+    "notConfigured": "The app is not configured. Copy .env.example to .env and fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY."
+  },
+  "home": {
+    "signOut": "Sign out",
+    "loading": "Loading …",
+    "noMembership": "Your account is not linked to an organisation. Contact your administrator.",
+    "loadFailed": "Could not load data. Please try again.",
+    "sheltersOwner": "Your shelters",
+    "sheltersLst": "Shelters in {lan}",
+    "sheltersKommun": "Shelters in {kommun}",
+    "count": "{count} shelters",
+    "showingFirst": "Showing the first {shown} of {count}.",
+    "capacity": "{capacity} places",
+    "empty": "No shelters are linked to your organisation yet.",
+    "comingSoon": "Coming next",
+    "modules": {
+      "selfCheck": "Simplified inspection",
+      "maintenance": "Maintenance log",
+      "plan": "48-hour plan",
+      "orders": "Orders and review",
+      "overview": "Readiness overview"
+    }
+  },
+  "roles": {
+    "owner_admin": "Property owner",
+    "caretaker": "Caretaker",
+    "inspector": "Case officer, county board",
+    "lst_admin": "Administrator, county board",
+    "kommun_viewer": "Municipality, read-only"
+  },
+  "lang": {
+    "switch": "Svenska"
+  }
+}
