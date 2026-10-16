@@ -94,6 +94,25 @@ The checklist is data, not code (`checklist_templates` and `checklist_items`), a
 current one is a **placeholder** until MCF or the länsstyrelse provides the official
 checklist. To replace it, insert a new version and set it `active`.
 
+### Maintenance log (underhållslogg)
+
+Open a shelter and tap **Ny post**: date, type of work, what was done, who did it,
+and optional photos. Like the self-check, an unsaved entry is kept on the phone.
+
+The log is built to hold up as evidence, since the state does not compensate damage
+caused by neglected maintenance:
+
+- A saved entry cannot be edited or deleted, not even by the service role.
+- A mistake is **voided** (makulerad) by an owner admin, with a reason. The entry
+  stays in the log and in every export, marked as voided.
+- Each entry shows both the date the work was done (the owner's statement) and the
+  time it was registered (set by the server), so backdating is visible.
+
+Exports: **Ladda ner PDF** and **Ladda ner CSV** per shelter, and on the start page
+owner admins get **Hela underhållsloggen (CSV)** for every shelter. The CSV is
+semicolon-separated UTF-8 with BOM, so it opens correctly in Swedish Excel, and
+cells that start with `=`, `+`, `-` or `@` are neutralised.
+
 After changing an edge function in `supabase/functions/`, restart the local stack
 (`npm run db:stop`, then `npm run db:start`) so the new code is served.
 
@@ -103,6 +122,9 @@ After changing an edge function in `supabase/functions/`, restart the local stac
 npm run db:reset          # wipes the local database and restores the demo state
 npm run seed:users        # recreate only the demo organisations, users and assignments
 ```
+
+If `npm run db:reset` stops with `DbSetupError: error running container`, run it again.
+This is an occasional Docker timing hiccup, not a problem with the data.
 
 The shelter seed (`supabase/seed/20_shelters.sql`) is generated from the pipeline output
 and committed. To regenerate it, for example for more län:

@@ -1,6 +1,6 @@
 # Threat model: Beredskap
 
-Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 2 (self-check). Review at every milestone.
+Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 3 (maintenance log). Review at every milestone.
 
 Beredskap is the login-gated part of skyddsrum.se. Property owners run self-checks
 (*förenklad kontroll*), keep maintenance logs and 48-hour plans. Länsstyrelser issue
@@ -40,7 +40,7 @@ open risks.
 | T4 | Anonymous or self-registered accounts get in. | Anonymous sign-in and self sign-up are disabled; anonymous JWTs are also ignored by the access helpers. A separate Supabase project from the public map, which does allow anonymous sign-in. | **Done** |
 | T5 | A new table is added without RLS, or with grants to `anon`. | Default privileges revoked; schema tests fail if any public table lacks RLS, if `anon` has any grant, or if a security-definer function lacks a fixed `search_path`. | **Done** |
 | T6 | Sensitive data leaks through public endpoints, the public GeoJSON or the JS bundle. | The public GeoJSON is checked for its four allowed properties; the build refuses secret keys in `VITE_*`; a test scans the bundle for secret keys. | **Done** |
-| T7 | Tampering with history (backdated maintenance, deleted findings). | Append-only audit log written by triggers; updates and deletes are rejected even for the service role. Server-side timestamps. Submitted self-checks, their answers and photo records cannot be updated by anyone, including the service role. | **Done** for current tables; extended per milestone |
+| T7 | Tampering with history (backdated maintenance, deleted findings). | Append-only audit log written by triggers; updates and deletes are rejected even for the service role. Server-side timestamps. Submitted self-checks, their answers and photo records cannot be updated by anyone, including the service role. Maintenance entries are append-only: a mistake is voided with a reason by an owner admin and stays visible; the work date and the server registration time are both shown and exported, so backdating is visible. | **Done** (milestones 1–3) |
 | T8 | Photo leaks: public bucket URLs, GPS coordinates in EXIF. | Private bucket; signed URLs valid 5 minutes, issued only to the owner organisation and the länsstyrelse; no storage write policies, so files can only be stored by the edge function. EXIF is dropped on the phone (canvas re-encode) and again on the server (APP1–APP15, comments and trailing data removed). JPEG only, 5 MB max. Tested end to end. | **Done** (milestone 2) |
 | T9 | A kommun user sees deficiency details. | Kommun policies expose only aggregate status; details behind a configurable policy that defaults to off. | Milestone 6 |
 | T10 | Credential stuffing or brute force. | Supabase Auth rate limits; strong password policy (12+ characters, mixed case and digits). Planned: MFA for länsstyrelse users. | Partly done |
@@ -52,6 +52,7 @@ open risks.
 | T16 | Forged or malformed submissions (missing items, fake photos, oversized input). | One database function validates everything: every checklist item answered exactly once, valid statuses, comments ≤ 2000 characters, control characters stripped, and a stored photo for every deficiency. A retried submit is idempotent. | **Done** (milestone 2) |
 | T17 | Flooding submissions or uploads. | Per-user limits in the database: 20 submissions and 100 photos an hour, 40 photos per inspection. Returns HTTP 429. | **Done** (milestone 2) |
 | T18 | Unsent drafts on a lost or shared phone. | Drafts (including photos) are kept on the device only until submitted, tied to the signed-in user, and deleted on sign-out after a warning. They are not encrypted at rest beyond what the phone provides. | Partly done; consider encrypting drafts |
+| T19 | CSV injection: a description like `=HYPERLINK(...)` runs as a formula when the export is opened in Excel. | Every CSV cell starting with `=`, `+`, `-`, `@`, tab or CR is prefixed with an apostrophe; all cells are quoted. | **Done** (milestone 3) |
 
 ## Open risks needing a decision
 
