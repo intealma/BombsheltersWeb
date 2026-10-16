@@ -1,0 +1,7 @@
+node_modules/
+dist/
+
+# Secrets and local settings. Copy .env.example to .env instead.
+.env
+.env.*
+!.env.example

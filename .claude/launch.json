@@ -6,6 +6,13 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8723"],
       "port": 8723
+    },
+    {
+      "name": "beredskap",
+      "runtimeExecutable": "npm.cmd",
+      "runtimeArgs": ["--prefix", "beredskap", "run", "dev"],
+      "port": 5173,
+      "url": "http://localhost:5173"
     }
   ]
 }
