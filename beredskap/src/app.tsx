@@ -6,6 +6,8 @@ import { Login } from './views/login';
 import { Home } from './views/home';
 import { SelfCheck } from './views/self-check';
 import { Receipt } from './views/receipt';
+import { ShelterPage } from './views/shelter';
+import { MaintenanceForm } from './views/maintenance-form';
 import { useRoute } from './lib/router';
 import { ShelterMark } from './components/shelter-mark';
 
@@ -49,6 +51,10 @@ export function App() {
           <Login />
         ) : route[0] === 'skyddsrum' && route[1] && route[2] === 'kontroll' ? (
           <SelfCheck key={route[1]} shelterId={route[1]} session={session} />
+        ) : route[0] === 'skyddsrum' && route[1] && route[2] === 'underhall' && route[3] === 'ny' ? (
+          <MaintenanceForm key={route[1]} shelterId={route[1]} session={session} />
+        ) : route[0] === 'skyddsrum' && route[1] && !route[2] ? (
+          <ShelterPage key={route[1]} shelterId={route[1]} session={session} />
         ) : route[0] === 'kontroll' && route[1] ? (
           <Receipt key={route[1]} checkId={route[1]} />
         ) : (

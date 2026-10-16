@@ -127,7 +127,7 @@ export function Receipt({ checkId }: { checkId: string }) {
 
   return (
     <div class="stack">
-      <a class="link-button back-link" href={href()}>← {t('receipt.back')}</a>
+      <a class="link-button back-link" href={href('skyddsrum', check.shelter_id)}>← {shelterAddress}</a>
       <section class="card">
         <div class="receipt-badge">
           <StatusIcon status="ok" class="status-icon" /> {t('receipt.submitted')}

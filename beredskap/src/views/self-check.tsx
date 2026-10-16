@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase';
 import { t, useLang } from '../i18n';
 import { fetchActiveTemplate, localized, photoRequired, submitSelfCheck, type ChecklistItem } from '../lib/checklist';
 import {
-  addPhoto,
   deleteDraft,
   deletePhoto,
   getDraftForShelter,
@@ -15,9 +14,10 @@ import {
   type DraftPhoto,
   type Status,
 } from '../lib/drafts';
-import { prepareImage, uploadPhoto, UploadError } from '../lib/photos';
+import { uploadPhoto, UploadError } from '../lib/photos';
 import { href, navigate } from '../lib/router';
 import { StatusIcon } from '../components/status-icon';
+import { AddPhotoButton, PhotoThumb } from '../components/photos';
 import { checkCounts } from '../lib/format';
 
 type Phase =
@@ -33,25 +33,6 @@ function isNetworkError(e: unknown): boolean {
   if (e instanceof UploadError) return e.status === 0;
   const message = (e as { message?: string })?.message ?? '';
   return !navigator.onLine || /failed to fetch|network|load failed/i.test(message);
-}
-
-function PhotoThumb({ photo, onRemove }: { photo: DraftPhoto; onRemove?: () => void }) {
-  const [url, setUrl] = useState('');
-  useEffect(() => {
-    const u = URL.createObjectURL(photo.blob);
-    setUrl(u);
-    return () => URL.revokeObjectURL(u);
-  }, [photo.blob]);
-  return (
-    <div class="thumb">
-      {url && <img src={url} alt="" />}
-      {onRemove && (
-        <button type="button" class="thumb-remove" aria-label={t('check.removePhoto')} onClick={onRemove}>
-          ×
-        </button>
-      )}
-    </div>
-  );
 }
 
 export function SelfCheck({ shelterId, session }: { shelterId: string; session: Session }) {
@@ -164,31 +145,6 @@ export function SelfCheck({ shelterId, session }: { shelterId: string; session: 
     );
   }
 
-  async function onFiles(item: ChecklistItem, input: HTMLInputElement) {
-    const files = Array.from(input.files ?? []);
-    input.value = '';
-    for (const file of files) {
-      try {
-        const { blob, width, height } = await prepareImage(file);
-        const photo: DraftPhoto = {
-          id: crypto.randomUUID(),
-          draftId: latest.current!.id,
-          itemKey: item.key,
-          blob,
-          width,
-          height,
-          uploaded: false,
-          createdAt: new Date().toISOString(),
-        };
-        await addPhoto(photo);
-        setPhotos((p) => [...p, photo]);
-        setNotice('');
-      } catch {
-        setNotice(t('check.photoFailed'));
-      }
-    }
-  }
-
   async function removePhoto(photo: DraftPhoto) {
     await deletePhoto(photo.id);
     setPhotos((p) => p.filter((x) => x.id !== photo.id));
@@ -197,7 +153,7 @@ export function SelfCheck({ shelterId, session }: { shelterId: string; session: 
   async function discard() {
     if (!draft || !window.confirm(t('check.discardConfirm'))) return;
     await deleteDraft(draft.id);
-    navigate();
+    navigate('skyddsrum', draft.shelterId);
   }
 
   // ---------------------------------------------------------------- submit
@@ -249,7 +205,7 @@ export function SelfCheck({ shelterId, session }: { shelterId: string; session: 
   const busy = phase.kind === 'sending';
   const header = (
     <div class="check-header">
-      <a class="link-button back-link" href={href()}>← {t('receipt.back')}</a>
+      <a class="link-button back-link" href={href('skyddsrum', draft.shelterId)}>← {draft.shelterAddress}</a>
       <div class="eyebrow">{t('check.eyebrow')}</div>
       <div class="check-shelter">
         {draft.shelterAddress} <span class="muted">· {draft.shelterId} · {draft.kommun}</span>
@@ -397,21 +353,19 @@ export function SelfCheck({ shelterId, session }: { shelterId: string; session: 
           {itemPhotos.length > 0 && (
             <div class="photo-grid">
               {itemPhotos.map((p) => (
-                <PhotoThumb key={p.id} photo={p} onRemove={p.uploaded ? undefined : () => removePhoto(p)} />
+                <PhotoThumb key={p.id} blob={p.blob} onRemove={p.uploaded ? undefined : () => removePhoto(p)} />
               ))}
             </div>
           )}
-          <label class="add-photo">
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              multiple
-              class="visually-hidden"
-              onChange={(e) => onFiles(item, e.currentTarget)}
-            />
-            <span aria-hidden="true">＋</span> {t('check.addPhoto')}
-          </label>
+          <AddPhotoButton
+            draftId={draft.id}
+            itemKey={item.key}
+            onAdded={(photo) => {
+              setPhotos((all) => [...all, photo]);
+              setNotice('');
+            }}
+            onError={setNotice}
+          />
         </div>
 
         <label class="field">

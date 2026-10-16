@@ -35,11 +35,11 @@
     "startCheck": "Inspection",
     "comingSoon": "Coming next",
     "modules": {
-      "maintenance": "Maintenance log",
       "plan": "48-hour plan",
       "orders": "Orders and review",
       "overview": "Readiness overview"
-    }
+    },
+    "open": "Open"
   },
   "check": {
     "eyebrow": "Simplified inspection",
@@ -120,5 +120,83 @@
   },
   "lang": {
     "switch": "Svenska"
+  },
+  "shelter": {
+    "eyebrow": "Shelter",
+    "startCheck": "Start inspection",
+    "continueCheck": "Continue draft",
+    "noChecks": "No inspection submitted yet.",
+    "notFound": "The shelter does not exist, or you do not have access to it."
+  },
+  "maintenance": {
+    "title": "Maintenance log",
+    "intro": "Dated entries show the shelter is looked after. A saved entry cannot be changed; a mistaken entry is voided with a reason.",
+    "add": "New entry",
+    "continueDraft": "Continue unsaved entry",
+    "empty": "No entries yet.",
+    "exportPdf": "Download PDF",
+    "exportCsv": "Download CSV",
+    "exportOrgCsv": "Full maintenance log (CSV)",
+    "exporting": "Exporting …",
+    "exportFailed": "The export failed. Please try again.",
+    "formTitle": "New maintenance entry",
+    "performedOn": "Date the work was done",
+    "categoryLabel": "Type of work",
+    "category": {
+      "inspektion": "Inspection",
+      "reparation": "Repair",
+      "ventilation": "Ventilation and filters",
+      "dorrar": "Doors and hatches",
+      "utrustning": "Equipment",
+      "rensning": "Clearing stored items",
+      "skyltning": "Signage",
+      "ovrigt": "Other"
+    },
+    "description": "What was done?",
+    "descriptionPlaceholder": "For example: replaced the ventilation filters, greased the door hinges.",
+    "performedBy": "Done by",
+    "performedByHint": "Name or company",
+    "photos": "Photos",
+    "save": "Save entry",
+    "saving": "Saving …",
+    "uploading": "Uploading photos {done} of {total} …",
+    "discard": "Discard draft",
+    "discardConfirm": "Discard the unsaved entry and its photos?",
+    "registered": "Registered",
+    "voided": "Voided",
+    "active": "Valid",
+    "voidedReason": "Voided {date}",
+    "void": "Void",
+    "voidReason": "Why should this entry be voided?",
+    "voidConfirm": "Void entry",
+    "cancel": "Cancel",
+    "voidFailed": "Could not void: {message}",
+    "saveFailed": "Could not save: {message}",
+    "offline": "No connection. The entry is saved on the phone. Try again when you have a signal.",
+    "dateInvalid": "The date must be today or within the last two years.",
+    "descriptionMissing": "Describe what was done.",
+    "performedByMissing": "Say who did the work.",
+    "pdfTitle": "Maintenance log",
+    "pdfNote": "Done = date given by the owner. Registered = when the entry was saved, set by the server. Entries cannot be changed afterwards; voided entries are shown with the reason.",
+    "period": "Period",
+    "entries": "Entries",
+    "entryCount": "{count} valid, {voided} voided",
+    "lastEntry": "Maintenance {date}",
+    "csv": {
+      "shelter": "Shelter",
+      "address": "Address",
+      "kommun": "Municipality",
+      "performedOn": "Date done",
+      "category": "Type",
+      "description": "Work done",
+      "performedBy": "Done by",
+      "registered": "Registered",
+      "registeredBy": "Registered by",
+      "photos": "Photos",
+      "status": "Status",
+      "voidReason": "Reason voided",
+      "id": "Entry ID"
+    },
+    "categoryMissing": "Choose the type of work."
   }
 }

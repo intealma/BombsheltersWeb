@@ -1,6 +1,6 @@
-// Self-check drafts live on the device (IndexedDB) until they are submitted,
-// so a dropped connection in a basement never loses work. Photos are stored
-// as already re-encoded JPEG blobs, without EXIF.
+// Self-check and maintenance drafts live on the device (IndexedDB) until they
+// are submitted, so a dropped connection in a basement never loses work.
+// Photos are stored as already re-encoded JPEG blobs, without EXIF.
 
 import type { Template } from './checklist';
 
@@ -25,6 +25,17 @@ export interface Draft {
   answers: Record<string, DraftAnswer>; // by checklist item id
 }
 
+export interface MaintenanceDraft {
+  id: string; // becomes the entry id, so a retried save is idempotent
+  userId: string;
+  shelterId: string;
+  performedOn: string; // YYYY-MM-DD
+  category: string;
+  description: string;
+  performedBy: string;
+  updatedAt: string;
+}
+
 export interface DraftPhoto {
   id: string;
   draftId: string;
@@ -37,7 +48,9 @@ export interface DraftPhoto {
 }
 
 const DB_NAME = 'beredskap';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
+
+type StoreName = 'drafts' | 'photos' | 'maintenance';
 
 let dbPromise: Promise<IDBDatabase> | undefined;
 
@@ -46,10 +59,16 @@ function db(): Promise<IDBDatabase> {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const d = req.result;
-      const drafts = d.createObjectStore('drafts', { keyPath: 'id' });
-      drafts.createIndex('byUser', 'userId');
-      const photos = d.createObjectStore('photos', { keyPath: 'id' });
-      photos.createIndex('byDraft', 'draftId');
+      // Version 1: self-check drafts and photos. Version 2: maintenance drafts.
+      if (!d.objectStoreNames.contains('drafts')) {
+        d.createObjectStore('drafts', { keyPath: 'id' }).createIndex('byUser', 'userId');
+      }
+      if (!d.objectStoreNames.contains('photos')) {
+        d.createObjectStore('photos', { keyPath: 'id' }).createIndex('byDraft', 'draftId');
+      }
+      if (!d.objectStoreNames.contains('maintenance')) {
+        d.createObjectStore('maintenance', { keyPath: 'id' }).createIndex('byUser', 'userId');
+      }
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
@@ -64,7 +83,7 @@ function request<T>(req: IDBRequest<T>): Promise<T> {
   });
 }
 
-async function store(name: 'drafts' | 'photos', mode: IDBTransactionMode = 'readonly') {
+async function store(name: StoreName, mode: IDBTransactionMode = 'readonly') {
   return (await db()).transaction(name, mode).objectStore(name);
 }
 
@@ -80,10 +99,11 @@ export async function saveDraft(draft: Draft): Promise<void> {
   await request((await store('drafts', 'readwrite')).put({ ...draft, updatedAt: new Date().toISOString() }));
 }
 
-export async function deleteDraft(id: string): Promise<void> {
+/** Deletes a draft of either kind together with its photos. */
+async function deleteWithPhotos(storeName: 'drafts' | 'maintenance', id: string): Promise<void> {
   const photos = await getPhotos(id);
-  const tx = (await db()).transaction(['drafts', 'photos'], 'readwrite');
-  tx.objectStore('drafts').delete(id);
+  const tx = (await db()).transaction([storeName, 'photos'], 'readwrite');
+  tx.objectStore(storeName).delete(id);
   for (const p of photos) tx.objectStore('photos').delete(p.id);
   await new Promise<void>((resolve, reject) => {
     tx.oncomplete = () => resolve();
@@ -91,8 +111,34 @@ export async function deleteDraft(id: string): Promise<void> {
   });
 }
 
+export async function deleteDraft(id: string): Promise<void> {
+  await deleteWithPhotos('drafts', id);
+}
+
+export async function listMaintenanceDrafts(userId: string): Promise<MaintenanceDraft[]> {
+  return request((await store('maintenance')).index('byUser').getAll(userId)) as Promise<MaintenanceDraft[]>;
+}
+
+export async function getMaintenanceDraft(userId: string, shelterId: string): Promise<MaintenanceDraft | undefined> {
+  return (await listMaintenanceDrafts(userId)).find((d) => d.shelterId === shelterId);
+}
+
+export async function saveMaintenanceDraft(draft: MaintenanceDraft): Promise<void> {
+  await request((await store('maintenance', 'readwrite')).put({ ...draft, updatedAt: new Date().toISOString() }));
+}
+
+export async function deleteMaintenanceDraft(id: string): Promise<void> {
+  await deleteWithPhotos('maintenance', id);
+}
+
+/** Every unsent draft (self-checks and maintenance) the user has on this device. */
+export async function countAllDrafts(userId: string): Promise<number> {
+  return (await listDrafts(userId)).length + (await listMaintenanceDrafts(userId)).length;
+}
+
 export async function deleteAllDrafts(userId: string): Promise<void> {
   for (const d of await listDrafts(userId)) await deleteDraft(d.id);
+  for (const d of await listMaintenanceDrafts(userId)) await deleteMaintenanceDraft(d.id);
 }
 
 export async function getPhotos(draftId: string): Promise<DraftPhoto[]> {

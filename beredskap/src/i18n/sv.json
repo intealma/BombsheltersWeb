@@ -35,11 +35,11 @@
     "startCheck": "Egenkontroll",
     "comingSoon": "Kommer härnäst",
     "modules": {
-      "maintenance": "Underhållslogg",
       "plan": "48-timmarsplan",
       "orders": "Förelägganden och granskning",
       "overview": "Beredskapsöversikt"
-    }
+    },
+    "open": "Öppna"
   },
   "check": {
     "eyebrow": "Förenklad kontroll",
@@ -120,5 +120,83 @@
   },
   "lang": {
     "switch": "English"
+  },
+  "shelter": {
+    "eyebrow": "Skyddsrum",
+    "startCheck": "Starta egenkontroll",
+    "continueCheck": "Fortsätt utkastet",
+    "noChecks": "Ingen egenkontroll inskickad ännu.",
+    "notFound": "Skyddsrummet finns inte, eller så har du inte behörighet till det."
+  },
+  "maintenance": {
+    "title": "Underhållslogg",
+    "intro": "Daterade poster visar att skyddsrummet sköts. En sparad post kan inte ändras; en felaktig post makuleras med en motivering.",
+    "add": "Ny post",
+    "continueDraft": "Fortsätt osparad post",
+    "empty": "Inga poster ännu.",
+    "exportPdf": "Ladda ner PDF",
+    "exportCsv": "Ladda ner CSV",
+    "exportOrgCsv": "Hela underhållsloggen (CSV)",
+    "exporting": "Exporterar …",
+    "exportFailed": "Exporten misslyckades. Försök igen.",
+    "formTitle": "Ny post i underhållsloggen",
+    "performedOn": "Datum då arbetet utfördes",
+    "categoryLabel": "Typ av åtgärd",
+    "category": {
+      "inspektion": "Tillsyn/inspektion",
+      "reparation": "Reparation",
+      "ventilation": "Ventilation och filter",
+      "dorrar": "Dörrar och luckor",
+      "utrustning": "Utrustning",
+      "rensning": "Rensning av förråd",
+      "skyltning": "Skyltning",
+      "ovrigt": "Övrigt"
+    },
+    "description": "Vad gjordes?",
+    "descriptionPlaceholder": "Till exempel: bytt filter i ventilationsaggregatet, smort dörrens gångjärn.",
+    "performedBy": "Utfört av",
+    "performedByHint": "Namn eller företag",
+    "photos": "Foton",
+    "save": "Spara posten",
+    "saving": "Sparar …",
+    "uploading": "Laddar upp foton {done} av {total} …",
+    "discard": "Släng utkastet",
+    "discardConfirm": "Släng den osparade posten och dess foton?",
+    "registered": "Registrerad",
+    "voided": "Makulerad",
+    "active": "Giltig",
+    "voidedReason": "Makulerad {date}",
+    "void": "Makulera",
+    "voidReason": "Varför ska posten makuleras?",
+    "voidConfirm": "Makulera posten",
+    "cancel": "Avbryt",
+    "voidFailed": "Kunde inte makulera: {message}",
+    "saveFailed": "Kunde inte spara: {message}",
+    "offline": "Ingen anslutning. Posten är sparad på telefonen. Försök igen när du har täckning.",
+    "dateInvalid": "Datumet måste vara idag eller inom de senaste två åren.",
+    "descriptionMissing": "Beskriv vad som gjordes.",
+    "performedByMissing": "Ange vem som utförde arbetet.",
+    "pdfTitle": "Underhållslogg",
+    "pdfNote": "Utfört = datum som ägaren har angett. Registrerad = när posten sparades, satt av servern. Poster kan inte ändras i efterhand; makulerade poster visas med motivering.",
+    "period": "Period",
+    "entries": "Poster",
+    "entryCount": "{count} giltiga, {voided} makulerade",
+    "lastEntry": "Underhåll {date}",
+    "csv": {
+      "shelter": "Skyddsrum",
+      "address": "Adress",
+      "kommun": "Kommun",
+      "performedOn": "Utfört datum",
+      "category": "Typ",
+      "description": "Åtgärd",
+      "performedBy": "Utfört av",
+      "registered": "Registrerad",
+      "registeredBy": "Registrerad av",
+      "photos": "Antal foton",
+      "status": "Status",
+      "voidReason": "Makuleringsorsak",
+      "id": "Post-ID"
+    },
+    "categoryMissing": "Välj typ av åtgärd."
   }
 }
