@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { t, useLang } from '../i18n';
+import { t, tn, useLang } from '../i18n';
+import { deleteAllDrafts, listDrafts } from '../lib/drafts';
+import { formatDate, formatNumber } from '../lib/format';
+import { href } from '../lib/router';
 import { ShelterMark } from '../components/shelter-mark';
 
-const LIST_LIMIT = 50;
+// Owners get their whole list; länsstyrelser and kommuner get their own
+// views in later milestones, so they only see a sample here for now.
+const OWNER_LIMIT = 1000;
+const AREA_LIMIT = 50;
 
 type OrgKind = 'owner' | 'lansstyrelse' | 'kommun';
 
@@ -23,14 +29,29 @@ interface Shelter {
   kommuner: { namn: string } | null;
 }
 
+interface LatestCheck {
+  id: string;
+  submitted_at: string;
+  brist_count: number;
+}
+
 type State =
   | { status: 'loading' }
   | { status: 'error' }
   | { status: 'no-membership' }
-  | { status: 'ready'; org: Organisation; role: string; scopeName: string; shelters: Shelter[]; count: number };
+  | {
+      status: 'ready';
+      org: Organisation;
+      role: string;
+      scopeName: string;
+      shelters: Shelter[];
+      count: number;
+      latest: Record<string, LatestCheck>;
+      drafts: Set<string>;
+    };
 
 const MODULES: Record<OrgKind, string[]> = {
-  owner: ['selfCheck', 'maintenance', 'plan'],
+  owner: ['maintenance', 'plan'],
   lansstyrelse: ['orders', 'overview'],
   kommun: ['overview'],
 };
@@ -48,6 +69,7 @@ async function loadHome(userId: string): Promise<State> {
   const membership = memberships.data?.[0] as unknown as { role: string; organisations: Organisation | null } | undefined;
   if (!membership?.organisations) return { status: 'no-membership' };
   const org = membership.organisations;
+  const isOwner = org.kind === 'owner';
 
   let scopeName = '';
   if (org.kind === 'lansstyrelse' && org.lan_kod) {
@@ -56,13 +78,22 @@ async function loadHome(userId: string): Promise<State> {
     scopeName = (await supabase.from('kommuner').select('namn').eq('kod', org.kommun_kod).single()).data?.namn ?? org.kommun_kod;
   }
 
-  const shelters = await supabase
-    .from('shelters')
-    .select('id, address, capacity, kommuner(namn)', { count: 'exact' })
-    .order('kommun_kod')
-    .order('address')
-    .limit(LIST_LIMIT);
+  const [shelters, checks, drafts] = await Promise.all([
+    supabase
+      .from('shelters')
+      .select('id, address, capacity, kommuner(namn)', { count: 'exact' })
+      .order('kommun_kod')
+      .order('address')
+      .limit(isOwner ? OWNER_LIMIT : AREA_LIMIT),
+    isOwner
+      ? supabase.from('self_checks').select('id, shelter_id, submitted_at, brist_count').order('submitted_at', { ascending: false }).limit(1000)
+      : Promise.resolve({ data: [] as (LatestCheck & { shelter_id: string })[] }),
+    isOwner ? listDrafts(userId).catch(() => []) : Promise.resolve([]),
+  ]);
   if (shelters.error) return { status: 'error' };
+
+  const latest: Record<string, LatestCheck> = {};
+  for (const c of (checks.data ?? []) as (LatestCheck & { shelter_id: string })[]) latest[c.shelter_id] ??= c;
 
   return {
     status: 'ready',
@@ -71,6 +102,8 @@ async function loadHome(userId: string): Promise<State> {
     scopeName,
     shelters: (shelters.data ?? []) as unknown as Shelter[],
     count: shelters.count ?? 0,
+    latest,
+    drafts: new Set(drafts.map((d) => d.shelterId)),
   };
 }
 
@@ -87,7 +120,14 @@ export function Home({ session }: { session: Session }) {
     };
   }, [session.user.id]);
 
-  const signOut = () => supabase.auth.signOut();
+  // Unsent drafts may hold deficiencies and photos. On a shared device they
+  // must not outlive the session, so signing out deletes them (after asking).
+  async function signOut() {
+    const drafts = await listDrafts(session.user.id).catch(() => []);
+    if (drafts.length && !window.confirm(t('home.signOutDrafts', { count: drafts.length }))) return;
+    await deleteAllDrafts(session.user.id).catch(() => undefined);
+    await supabase.auth.signOut();
+  }
 
   if (state.status === 'loading') return <p class="muted">{t('home.loading')}</p>;
   if (state.status !== 'ready') {
@@ -101,7 +141,8 @@ export function Home({ session }: { session: Session }) {
     );
   }
 
-  const { org, role, scopeName, shelters, count } = state;
+  const { org, role, scopeName, shelters, count, latest, drafts } = state;
+  const isOwner = org.kind === 'owner';
   const title =
     org.kind === 'lansstyrelse' ? t('home.sheltersLst', { lan: scopeName })
     : org.kind === 'kommun' ? t('home.sheltersKommun', { kommun: scopeName })
@@ -121,26 +162,54 @@ export function Home({ session }: { session: Session }) {
       <section class="card">
         <div class="card-head">
           <h2>{title}</h2>
-          <span class="stat">{t('home.count', { count: count.toLocaleString('sv-SE') })}</span>
+          <span class="stat">{t('home.count', { count: formatNumber(count) })}</span>
         </div>
         {count === 0 ? (
           <p class="muted">{t('home.empty')}</p>
         ) : (
           <>
             <ul class="shelter-list">
-              {shelters.map((s) => (
-                <li key={s.id}>
-                  <ShelterMark class="row-mark" />
-                  <div class="row-main">
-                    <div class="row-title">{s.address || s.id}</div>
-                    <div class="row-sub">{s.id} · {s.kommuner?.namn}</div>
-                  </div>
-                  <div class="row-side">{t('home.capacity', { capacity: s.capacity })}</div>
-                </li>
-              ))}
+              {shelters.map((s) => {
+                const last = latest[s.id];
+                const main = (
+                  <>
+                    <ShelterMark class="row-mark" />
+                    <div class="row-main">
+                      <div class="row-title">{s.address || s.id}</div>
+                      <div class="row-sub">
+                        {s.id} · {s.kommuner?.namn} · {t('home.capacity', { capacity: s.capacity })}
+                      </div>
+                    </div>
+                  </>
+                );
+                if (!isOwner) return <li key={s.id}><div class="row">{main}</div></li>;
+                return (
+                  <li key={s.id}>
+                    <a class="row" href={href('skyddsrum', s.id, 'kontroll')}>
+                      {main}
+                      <span class={`chip${drafts.has(s.id) ? ' chip-strong' : ''}`}>
+                        {drafts.has(s.id) ? t('home.draft') : t('home.startCheck')} →
+                      </span>
+                    </a>
+                    <div class="row-meta">
+                      {last ? (
+                        <a href={href('kontroll', last.id)}>
+                          {last.brist_count
+                            ? t('home.lastCheckBrister', { date: formatDate(last.submitted_at), brister: tn('check.countBrist', last.brist_count) })
+                            : t('home.lastCheck', { date: formatDate(last.submitted_at) })}
+                          {' · '}
+                          {t('home.receiptLink')}
+                        </a>
+                      ) : (
+                        <span class="muted">{t('home.neverChecked')}</span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
             {count > shelters.length && (
-              <p class="muted small">{t('home.showingFirst', { shown: shelters.length, count: count.toLocaleString('sv-SE') })}</p>
+              <p class="muted small">{t('home.showingFirst', { shown: shelters.length, count: formatNumber(count) })}</p>
             )}
           </>
         )}

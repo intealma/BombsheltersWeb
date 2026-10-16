@@ -22,6 +22,10 @@ function initialLang(): Lang {
 let current: Lang = initialLang();
 const listeners = new Set<() => void>();
 
+export function getLang(): Lang {
+  return current;
+}
+
 export function setLang(lang: Lang) {
   current = lang;
   document.documentElement.lang = lang;
@@ -41,6 +45,12 @@ function lookup(dict: unknown, key: string): string | undefined {
 export function t(key: string, vars?: Record<string, string | number>): string {
   const text = lookup(dictionaries[current], key) ?? lookup(dictionaries.sv, key) ?? key;
   return vars ? text.replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? `{${name}}`)) : text;
+}
+
+/** Count-aware variant: uses `<key>_one` for exactly one, if it exists. */
+export function tn(key: string, n: number, vars?: Record<string, string | number>): string {
+  const one = n === 1 && lookup(dictionaries[current], `${key}_one`) !== undefined;
+  return t(one ? `${key}_one` : key, { n, ...vars });
 }
 
 /** Re-renders the calling component when the language changes. */
