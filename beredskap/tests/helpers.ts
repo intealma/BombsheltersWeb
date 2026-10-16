@@ -39,6 +39,35 @@ export async function accessToken(client: SupabaseClient): Promise<string> {
   return data.session.access_token;
 }
 
+/**
+ * Uploads a photo through the upload-photo edge function, as the given
+ * client (or with no token when client is null).
+ */
+export async function uploadPhoto(
+  client: SupabaseClient | null,
+  params: {
+    shelterId: string;
+    contextId: string;
+    context?: 'self_check' | 'maintenance';
+    itemKey?: string;
+    photoId?: string;
+    body: Uint8Array;
+    contentType?: string;
+  },
+): Promise<{ status: number; json: Record<string, any> }> {
+  const q = new URLSearchParams({
+    photo_id: params.photoId ?? randomUUID(),
+    shelter_id: params.shelterId,
+    context: params.context ?? 'self_check',
+    context_id: params.contextId,
+    item_key: params.itemKey ?? '',
+  });
+  const headers: Record<string, string> = { apikey: anonKey, 'Content-Type': params.contentType ?? 'image/jpeg' };
+  if (client) headers.Authorization = `Bearer ${await accessToken(client)}`;
+  const res = await fetch(`${url}/functions/v1/upload-photo?${q}`, { method: 'POST', headers, body: params.body as BodyInit });
+  return { status: res.status, json: await res.json().catch(() => ({})) };
+}
+
 export async function signedIn(email: string, password: string): Promise<SupabaseClient> {
   const client = anonClient();
   const { error } = await client.auth.signInWithPassword({ email, password });

@@ -8,7 +8,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ROOT } from '../scripts/local-env.mjs';
-import { accessToken, admin, ALL_CALLERS, createFixtures, env, rows, signInAll, type Caller, type Fixtures } from './helpers';
+import { admin, ALL_CALLERS, createFixtures, rows, signInAll, uploadPhoto, type Caller, type Fixtures } from './helpers';
 
 const fixture = (name: string) => new Uint8Array(readFileSync(path.join(ROOT, 'tests', 'fixtures', name)));
 const EXIF_JPEG = fixture('exif-gps.jpg');
@@ -59,19 +59,9 @@ async function upload(
   caller: Caller,
   params: { shelterId: string; contextId: string; itemKey?: string; photoId?: string; body?: Uint8Array; contentType?: string },
 ) {
-  const q = new URLSearchParams({
-    photo_id: params.photoId ?? randomUUID(),
-    shelter_id: params.shelterId,
-    context: 'self_check',
-    context_id: params.contextId,
-    item_key: params.itemKey ?? '',
-  });
-  const headers: Record<string, string> = { apikey: env.anonKey!, 'Content-Type': params.contentType ?? 'image/jpeg' };
-  if (caller !== 'anon') headers.Authorization = `Bearer ${await accessToken(as[caller])}`;
-  const res = await fetch(`${env.url}/functions/v1/upload-photo?${q}`, { method: 'POST', headers, body: (params.body ?? EXIF_JPEG) as BodyInit });
-  const json = await res.json().catch(() => ({}));
-  if (res.status === 201) storedPaths.push(json.path);
-  return { status: res.status, json };
+  const res = await uploadPhoto(caller === 'anon' ? null : as[caller], { ...params, body: params.body ?? EXIF_JPEG });
+  if (res.status === 201) storedPaths.push(res.json.path);
+  return res;
 }
 
 const ascii = (bytes: Uint8Array) => Buffer.from(bytes).toString('latin1');
