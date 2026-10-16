@@ -76,6 +76,27 @@ Sign in with one of the demo users. The password is `DEMO_PASSWORD` from your `.
 
 Supabase Studio (database UI) runs at <http://127.0.0.1:54323>.
 
+### Self-check (förenklad kontroll)
+
+Sign in as `skotare@example.com` or `agare@example.com`, tap a shelter, and work
+through the checklist one item per screen:
+
+- Each item gets OK, Brist or Ej tillämpligt. A deficiency (Brist) needs at least one photo.
+- Everything is saved on the phone (IndexedDB) as you go. If the connection drops,
+  the draft survives a reload, and submitting can be retried; it never creates a duplicate.
+- Photos are shrunk and re-encoded on the phone, which drops GPS and other EXIF
+  data. The `upload-photo` edge function strips metadata again on the server, then
+  stores the file in a private bucket. Photos are only shown through links that
+  expire after 5 minutes.
+- Submitting shows a receipt, and **Ladda ner PDF** downloads a summary with photos.
+
+The checklist is data, not code (`checklist_templates` and `checklist_items`), and the
+current one is a **placeholder** until MCF or the länsstyrelse provides the official
+checklist. To replace it, insert a new version and set it `active`.
+
+After changing an edge function in `supabase/functions/`, restart the local stack
+(`npm run db:stop`, then `npm run db:start`) so the new code is served.
+
 ### Seed and reset
 
 ```powershell
@@ -94,7 +115,7 @@ python scripts/build_shelter_seed.py --lan 05 06  # several län
 ### Test
 
 ```powershell
-npm test                  # access control, database guarantees, public data checks
+npm test                  # access control, self-checks, photos, database guarantees, public data
 npm run typecheck
 npm run build
 ```
@@ -114,6 +135,7 @@ npm run db:stop
 beredskap/
   src/                  app (Preact + TypeScript), i18n/sv.json and en.json
   supabase/migrations/  schema, row-level security, audit log
+  supabase/functions/   upload-photo edge function (EXIF stripping)
   supabase/seed/        kommuner and shelters (generated)
   scripts/              shelter seed builder, demo users
   tests/                access-control and schema tests

@@ -1,6 +1,6 @@
 # Threat model: Beredskap
 
-Status: draft for Phase 1 (demo MVP), October 2026. Review at every milestone.
+Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 2 (self-check). Review at every milestone.
 
 Beredskap is the login-gated part of skyddsrum.se. Property owners run self-checks
 (*förenklad kontroll*), keep maintenance logs and 48-hour plans. Länsstyrelser issue
@@ -40,15 +40,18 @@ open risks.
 | T4 | Anonymous or self-registered accounts get in. | Anonymous sign-in and self sign-up are disabled; anonymous JWTs are also ignored by the access helpers. A separate Supabase project from the public map, which does allow anonymous sign-in. | **Done** |
 | T5 | A new table is added without RLS, or with grants to `anon`. | Default privileges revoked; schema tests fail if any public table lacks RLS, if `anon` has any grant, or if a security-definer function lacks a fixed `search_path`. | **Done** |
 | T6 | Sensitive data leaks through public endpoints, the public GeoJSON or the JS bundle. | The public GeoJSON is checked for its four allowed properties; the build refuses secret keys in `VITE_*`; a test scans the bundle for secret keys. | **Done** |
-| T7 | Tampering with history (backdated maintenance, deleted findings). | Append-only audit log written by triggers; updates and deletes are rejected even for the service role. Server-side timestamps. | **Done** for current tables; extended per milestone |
-| T8 | Photo leaks: public bucket URLs, GPS coordinates in EXIF. | Private bucket, short-lived signed URLs only, EXIF stripped on upload (server side). | Milestone 2 |
+| T7 | Tampering with history (backdated maintenance, deleted findings). | Append-only audit log written by triggers; updates and deletes are rejected even for the service role. Server-side timestamps. Submitted self-checks, their answers and photo records cannot be updated by anyone, including the service role. | **Done** for current tables; extended per milestone |
+| T8 | Photo leaks: public bucket URLs, GPS coordinates in EXIF. | Private bucket; signed URLs valid 5 minutes, issued only to the owner organisation and the länsstyrelse; no storage write policies, so files can only be stored by the edge function. EXIF is dropped on the phone (canvas re-encode) and again on the server (APP1–APP15, comments and trailing data removed). JPEG only, 5 MB max. Tested end to end. | **Done** (milestone 2) |
 | T9 | A kommun user sees deficiency details. | Kommun policies expose only aggregate status; details behind a configurable policy that defaults to off. | Milestone 6 |
 | T10 | Credential stuffing or brute force. | Supabase Auth rate limits; strong password policy (12+ characters, mixed case and digits). Planned: MFA for länsstyrelse users. | Partly done |
 | T11 | XSS steals the session (stored in localStorage). | Strict CSP without inline scripts, Preact escaping by default, no `dangerouslySetInnerHTML`, self-hosted fonts. | CSP at deploy (milestone 7) |
-| T12 | Abuse of the self-check link. | The link only identifies the order. Opening it requires sign-in as a member of the owning organisation. | Milestone 2 / 5 |
+| T12 | Abuse of the self-check link. | The link only identifies the order. Opening it requires sign-in as a member of the owning organisation. Submitting is checked in the database (owner admin or caretaker of the assigned organisation). | Submission rules **done** (milestone 2); order links in milestone 5 |
 | T13 | Demo data is mistaken for real inspection results (fictional "brister" on real addresses). | Demo behind an access code, "DEMO – fiktiva statusar" on every screen, fictional organisations only, never on the public domain without login. | Milestone 7 |
 | T14 | Hosting under foreign jurisdiction (US CLOUD Act). | Data stored in Stockholm (eu-north-1). Everything that matters is plain Postgres (SQL migrations, RLS), so it can move to Swedish-owned hosting. See `docs/hosting.md`. | Documented; decision before production |
 | T15 | Personal data is kept longer or more broadly than needed (GDPR). | Minimal fields (name, phone); profiles visible only to colleagues; deleting a user removes their profile; profiles are not copied into the audit log. Export and deletion tooling planned. | Partly done |
+| T16 | Forged or malformed submissions (missing items, fake photos, oversized input). | One database function validates everything: every checklist item answered exactly once, valid statuses, comments ≤ 2000 characters, control characters stripped, and a stored photo for every deficiency. A retried submit is idempotent. | **Done** (milestone 2) |
+| T17 | Flooding submissions or uploads. | Per-user limits in the database: 20 submissions and 100 photos an hour, 40 photos per inspection. Returns HTTP 429. | **Done** (milestone 2) |
+| T18 | Unsent drafts on a lost or shared phone. | Drafts (including photos) are kept on the device only until submitted, tied to the signed-in user, and deleted on sign-out after a warning. They are not encrypted at rest beyond what the phone provides. | Partly done; consider encrypting drafts |
 
 ## Open risks needing a decision
 
