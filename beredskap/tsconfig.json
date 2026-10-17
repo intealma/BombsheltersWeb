@@ -13,7 +13,7 @@
     "allowJs": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "types": ["vite/client", "node"]
+    "types": ["vite/client", "node", "geojson"]
   },
   "include": ["src", "tests", "scripts", "vite.config.ts", "vitest.config.ts"]
 }

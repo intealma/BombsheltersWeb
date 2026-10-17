@@ -108,7 +108,12 @@
     "pdfDemo": "DEMO - fictional data",
     "pdfGenerated": "Created {date} by skyddsrum.se Beredskap",
     "pdfPage": "Page {n} of {total}",
-    "noComment": "No comment."
+    "noComment": "No comment.",
+    "reviewTitle": "County board review",
+    "reviewedAt": "Reviewed {date}",
+    "notReviewed": "Not reviewed yet.",
+    "openReview": "Show the review",
+    "lstSays": "County board"
   },
   "roles": {
     "owner_admin": "Property owner",
@@ -267,5 +272,112 @@
       "save": "Save contact"
     },
     "ownersOnly": "The plan is only available to property owners."
+  },
+  "status": {
+    "ej_forelagd": "Not ordered",
+    "forelagd": "Ordered",
+    "forsenad": "Overdue",
+    "inskickad": "Submitted",
+    "godkand": "Approved",
+    "brister": "Deficiencies",
+    "platsbesok": "Site visit required"
+  },
+  "lst": {
+    "cardTitle": "County board overview",
+    "cardIntro": "Map and table of every shelter in the county: orders, submitted inspections and review.",
+    "open": "Open the overview",
+    "forbidden": "The overview is only available to county board case officers.",
+    "title": "Shelters in {lan}",
+    "summary": "{total} shelters · {review} to review",
+    "synced": "updated {time}",
+    "kommun": "Municipality",
+    "allKommuner": "All municipalities",
+    "search": "Search",
+    "searchPlaceholder": "Address, shelter id or owner",
+    "statusFilter": "Filter by status",
+    "clearFilter": "Show all statuses",
+    "mapHint": "Click a shelter to select it. Hold Shift and drag to select an area.",
+    "noOwner": "No registered owner",
+    "review": "Review",
+    "view": "View",
+    "cancel": "Withdraw",
+    "cancelConfirm": "Withdraw the order for {address}?",
+    "order": {
+      "title": "Order a simplified inspection",
+      "selected": "{count} shelters selected",
+      "selectedNoOwner": "{count} of them have no registered owner and will be skipped.",
+      "selectFiltered": "Select all in the list ({count})",
+      "clear": "Clear selection",
+      "due": "Reply by",
+      "create": "Create orders ({count})",
+      "creating": "Creating …",
+      "demoNote": "Demo: no emails are sent. Copy the link to each owner.",
+      "failed": "That did not work: {message}",
+      "created": "{count} orders were created, reply by {date}.",
+      "noOwner": "{count} shelters have no registered owner and were skipped.",
+      "alreadyOpen": "{count} shelters already had an open order.",
+      "outsideLan": "{count} shelters are outside the county.",
+      "linksIntro": "One unique link per owner. The owner signs in to see their shelters.",
+      "shelterCount": "{count} shelters",
+      "linkFor": "Link for {owner}",
+      "copy": "Copy",
+      "copied": "Copied"
+    },
+    "queue": {
+      "title": "To review ({count})",
+      "empty": "Nothing to review right now.",
+      "submitted": "submitted {date}"
+    },
+    "table": {
+      "title": "Shelters ({count})",
+      "csv": "Export CSV",
+      "more": "Show more ({shown} of {total})"
+    },
+    "col": {
+      "select": "Select",
+      "selectRow": "Select {address}",
+      "status": "Status",
+      "id": "Shelter id",
+      "address": "Shelter",
+      "kommun": "Municipality",
+      "capacity": "Places",
+      "owner": "Owner",
+      "due": "Reply by",
+      "submitted": "Submitted",
+      "brister": "Deficiencies",
+      "reviewed": "Reviewed",
+      "action": "Action"
+    }
+  },
+  "review": {
+    "eyebrow": "Review of simplified inspection",
+    "backToOverview": "Back to the overview",
+    "backToShelter": "Back to the shelter",
+    "history": "Earlier reviews",
+    "ownerSaid": "Owner",
+    "photoAlt": "Photo: {item}",
+    "decisionFor": "Assessment of {item}",
+    "itemComment": "Comment to the owner (optional)",
+    "result": "Result",
+    "resultHint": "The result follows from the items: a site visit weighs most, then deficiencies.",
+    "overallComment": "Summary comment to the owner (optional)",
+    "submit": "Save the review",
+    "saving": "Saving …",
+    "saved": "The review is saved.",
+    "next": "Next to review",
+    "failed": "Could not save: {message}"
+  },
+  "notice": {
+    "eyebrow": "Order",
+    "title": "Simplified inspection of shelters",
+    "from": "From {lst}, {date}.",
+    "due": "Reply by {date}",
+    "dueShort": "by {date}",
+    "progress": "{done} of {total} shelters submitted.",
+    "explain": "Do a simplified inspection of each shelter below and submit it here. The county board sees the result straight away.",
+    "answered": "Submitted {date}",
+    "cancelled": "The order has been withdrawn.",
+    "start": "Start inspection",
+    "notFound": "The order does not exist, or you are signed in with an account that does not belong to the organisation it concerns."
   }
 }

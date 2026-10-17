@@ -8,6 +8,8 @@ import { downloadCsv } from '../lib/csv';
 import { formatDate, formatNumber } from '../lib/format';
 import { href } from '../lib/router';
 import { ShelterMark } from '../components/shelter-mark';
+import { StatusBadge } from '../components/status-badge';
+import type { ReviewStatus } from '../lib/status';
 
 // Owners get their whole list; länsstyrelser and kommuner get their own
 // views in later milestones, so they only see a sample here for now.
@@ -50,12 +52,13 @@ type State =
       count: number;
       latest: Record<string, LatestCheck>;
       lastMaintenance: Record<string, string>;
+      review: Record<string, { status: ReviewStatus; due_date: string | null }>;
       drafts: Set<string>;
     };
 
 const MODULES: Record<OrgKind, string[]> = {
   owner: [],
-  lansstyrelse: ['orders', 'overview'],
+  lansstyrelse: [],
   kommun: ['overview'],
 };
 
@@ -81,7 +84,7 @@ async function loadHome(userId: string): Promise<State> {
     scopeName = (await supabase.from('kommuner').select('namn').eq('kod', org.kommun_kod).single()).data?.namn ?? org.kommun_kod;
   }
 
-  const [shelters, checks, maintenance, drafts, maintenanceDrafts] = await Promise.all([
+  const [shelters, checks, maintenance, drafts, maintenanceDrafts, reviewStatus] = await Promise.all([
     supabase
       .from('shelters')
       .select('id, address, capacity, kommuner(namn)', { count: 'exact' })
@@ -100,6 +103,9 @@ async function loadHome(userId: string): Promise<State> {
       : Promise.resolve({ data: [] }),
     isOwner ? listDrafts(userId).catch(() => []) : Promise.resolve([]),
     isOwner ? listMaintenanceDrafts(userId).catch(() => []) : Promise.resolve([]),
+    isOwner
+      ? supabase.from('shelter_review_status').select('shelter_id, status, due_date').limit(OWNER_LIMIT)
+      : Promise.resolve({ data: [] }),
   ]);
   if (shelters.error) return { status: 'error' };
 
@@ -120,6 +126,9 @@ async function loadHome(userId: string): Promise<State> {
     count: shelters.count ?? 0,
     latest,
     lastMaintenance,
+    review: Object.fromEntries(
+      ((reviewStatus.data ?? []) as { shelter_id: string; status: ReviewStatus; due_date: string | null }[]).map((r) => [r.shelter_id, r]),
+    ),
     drafts: new Set([...drafts, ...maintenanceDrafts].map((d) => d.shelterId)),
   };
 }
@@ -159,7 +168,7 @@ export function Home({ session }: { session: Session }) {
     );
   }
 
-  const { org, role, scopeName, shelters, count, latest, lastMaintenance, drafts } = state;
+  const { org, role, scopeName, shelters, count, latest, lastMaintenance, review, drafts } = state;
   const isOwner = org.kind === 'owner';
 
   async function exportOrgCsv() {
@@ -230,6 +239,14 @@ export function Home({ session }: { session: Session }) {
                       </span>
                     </a>
                     <div class="row-meta">
+                      {review[s.id] && review[s.id].status !== 'ej_forelagd' && (
+                        <span class="row-status">
+                          <StatusBadge status={review[s.id].status} />
+                          {(review[s.id].status === 'forelagd' || review[s.id].status === 'forsenad') && review[s.id].due_date && (
+                            <> {t('notice.dueShort', { date: formatDate(review[s.id].due_date!) })}</>
+                          )}
+                        </span>
+                      )}
                       {last ? (
                         <a href={href('kontroll', last.id)}>
                           {last.brist_count
@@ -255,6 +272,14 @@ export function Home({ session }: { session: Session }) {
           </>
         )}
       </section>
+
+      {org.kind === 'lansstyrelse' && (
+        <a class="card card-link" href={href('lansstyrelse')}>
+          <h2>{t('lst.cardTitle')}</h2>
+          <p class="muted small">{t('lst.cardIntro')}</p>
+          <span class="chip">{t('lst.open')} →</span>
+        </a>
+      )}
 
       {isOwner && (
         <a class="card card-link" href={href('beredskap')}>

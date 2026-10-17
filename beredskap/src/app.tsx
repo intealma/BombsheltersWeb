@@ -9,6 +9,9 @@ import { Receipt } from './views/receipt';
 import { ShelterPage } from './views/shelter';
 import { MaintenanceForm } from './views/maintenance-form';
 import { ReadinessPage } from './views/readiness';
+import { LazyDashboard } from './views/lazy-dashboard';
+import { ReviewPage } from './views/review';
+import { NoticePage } from './views/notice';
 import { SimulationBanner } from './components/simulation-banner';
 import { useRoute } from './lib/router';
 import { ShelterMark } from './components/shelter-mark';
@@ -48,7 +51,7 @@ export function App() {
 
       {session && <SimulationBanner userId={session.user.id} />}
 
-      <main class="content">
+      <main class={route[0] === 'lansstyrelse' || route[0] === 'granska' ? 'content wide' : 'content'}>
         {session === undefined ? (
           <p class="muted">{t('home.loading')}</p>
         ) : !session ? (
@@ -59,6 +62,12 @@ export function App() {
           <MaintenanceForm key={route[1]} shelterId={route[1]} session={session} />
         ) : route[0] === 'skyddsrum' && route[1] && !route[2] ? (
           <ShelterPage key={route[1]} shelterId={route[1]} session={session} />
+        ) : route[0] === 'lansstyrelse' ? (
+          <LazyDashboard session={session} />
+        ) : route[0] === 'granska' && route[1] ? (
+          <ReviewPage key={route[1]} checkId={route[1]} session={session} />
+        ) : route[0] === 'forelaggande' && route[1] ? (
+          <NoticePage key={route[1]} token={route[1]} />
         ) : route[0] === 'beredskap' ? (
           <ReadinessPage session={session} />
         ) : route[0] === 'kontroll' && route[1] ? (

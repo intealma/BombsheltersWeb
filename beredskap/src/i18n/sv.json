@@ -108,7 +108,12 @@
     "pdfDemo": "DEMO - fiktiva uppgifter",
     "pdfGenerated": "Skapad {date} av skyddsrum.se Beredskap",
     "pdfPage": "Sida {n} av {total}",
-    "noComment": "Ingen kommentar."
+    "noComment": "Ingen kommentar.",
+    "reviewTitle": "Länsstyrelsens granskning",
+    "reviewedAt": "Granskad {date}",
+    "notReviewed": "Inte granskad ännu.",
+    "openReview": "Visa granskningen",
+    "lstSays": "Länsstyrelsen"
   },
   "roles": {
     "owner_admin": "Fastighetsägare",
@@ -267,5 +272,112 @@
       "save": "Spara kontakt"
     },
     "ownersOnly": "Planen finns bara för fastighetsägare."
+  },
+  "status": {
+    "ej_forelagd": "Ej förelagd",
+    "forelagd": "Förelagd",
+    "forsenad": "Försenad",
+    "inskickad": "Inskickad",
+    "godkand": "Godkänd",
+    "brister": "Brister",
+    "platsbesok": "Platsbesök krävs"
+  },
+  "lst": {
+    "cardTitle": "Länsstyrelsens översikt",
+    "cardIntro": "Karta och tabell över alla skyddsrum i länet: förelägganden, inskickade kontroller och granskning.",
+    "open": "Öppna översikten",
+    "forbidden": "Översikten finns bara för länsstyrelsens handläggare.",
+    "title": "Skyddsrum i {lan}",
+    "summary": "{total} skyddsrum · {review} att granska",
+    "synced": "uppdaterad {time}",
+    "kommun": "Kommun",
+    "allKommuner": "Alla kommuner",
+    "search": "Sök",
+    "searchPlaceholder": "Adress, skyddsrums-id eller ägare",
+    "statusFilter": "Filtrera på status",
+    "clearFilter": "Visa alla statusar",
+    "mapHint": "Klicka på ett skyddsrum för att välja det. Håll ned Skift och dra för att välja ett område.",
+    "noOwner": "Ingen registrerad ägare",
+    "review": "Granska",
+    "view": "Visa",
+    "cancel": "Återkalla",
+    "cancelConfirm": "Återkalla föreläggandet för {address}?",
+    "order": {
+      "title": "Förelägg förenklad kontroll",
+      "selected": "{count} skyddsrum valda",
+      "selectedNoOwner": "{count} av dem saknar registrerad ägare och hoppas över.",
+      "selectFiltered": "Välj alla i listan ({count})",
+      "clear": "Rensa val",
+      "due": "Sista dag att svara",
+      "create": "Skapa förelägganden ({count})",
+      "creating": "Skapar …",
+      "demoNote": "Demo: inga e-postmeddelanden skickas. Kopiera länken till varje ägare.",
+      "failed": "Det gick inte: {message}",
+      "created": "{count} förelägganden skapades, sista svarsdag {date}.",
+      "noOwner": "{count} skyddsrum saknar registrerad ägare och hoppades över.",
+      "alreadyOpen": "{count} skyddsrum hade redan ett öppet föreläggande.",
+      "outsideLan": "{count} skyddsrum ligger utanför länet.",
+      "linksIntro": "En unik länk per ägare. Ägaren loggar in för att se sina skyddsrum.",
+      "shelterCount": "{count} skyddsrum",
+      "linkFor": "Länk till {owner}",
+      "copy": "Kopiera",
+      "copied": "Kopierad"
+    },
+    "queue": {
+      "title": "Att granska ({count})",
+      "empty": "Inget att granska just nu.",
+      "submitted": "inskickad {date}"
+    },
+    "table": {
+      "title": "Skyddsrum ({count})",
+      "csv": "Exportera CSV",
+      "more": "Visa fler ({shown} av {total})"
+    },
+    "col": {
+      "select": "Välj",
+      "selectRow": "Välj {address}",
+      "status": "Status",
+      "id": "Skyddsrums-id",
+      "address": "Skyddsrum",
+      "kommun": "Kommun",
+      "capacity": "Platser",
+      "owner": "Ägare",
+      "due": "Svar senast",
+      "submitted": "Inskickad",
+      "brister": "Brister",
+      "reviewed": "Granskad",
+      "action": "Åtgärd"
+    }
+  },
+  "review": {
+    "eyebrow": "Granskning av förenklad kontroll",
+    "backToOverview": "Till översikten",
+    "backToShelter": "Till skyddsrummet",
+    "history": "Tidigare granskningar",
+    "ownerSaid": "Ägaren",
+    "photoAlt": "Foto: {item}",
+    "decisionFor": "Bedömning av {item}",
+    "itemComment": "Kommentar till ägaren (valfritt)",
+    "result": "Resultat",
+    "resultHint": "Resultatet följer av punkterna: ett platsbesök väger tyngst, därefter brister.",
+    "overallComment": "Sammanfattande kommentar till ägaren (valfritt)",
+    "submit": "Spara granskningen",
+    "saving": "Sparar …",
+    "saved": "Granskningen är sparad.",
+    "next": "Nästa att granska",
+    "failed": "Det gick inte att spara: {message}"
+  },
+  "notice": {
+    "eyebrow": "Föreläggande",
+    "title": "Förenklad kontroll av skyddsrum",
+    "from": "Från {lst}, {date}.",
+    "due": "Svara senast {date}",
+    "dueShort": "senast {date}",
+    "progress": "{done} av {total} skyddsrum är inskickade.",
+    "explain": "Gör en förenklad kontroll av varje skyddsrum nedan och skicka in den här. Länsstyrelsen ser resultatet direkt.",
+    "answered": "Inskickad {date}",
+    "cancelled": "Föreläggandet är återkallat.",
+    "start": "Starta egenkontroll",
+    "notFound": "Föreläggandet finns inte, eller så är du inloggad med ett konto som inte hör till den organisation det gäller."
   }
 }

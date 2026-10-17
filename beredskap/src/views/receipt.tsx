@@ -8,6 +8,8 @@ import { href } from '../lib/router';
 import { downloadReceiptPdf } from '../lib/pdf';
 import { StatusIcon } from '../components/status-icon';
 import type { Status } from '../lib/drafts';
+import type { ReviewStatus } from '../lib/status';
+import { StatusBadge } from '../components/status-badge';
 
 interface CheckRow {
   id: string;
@@ -41,10 +43,19 @@ interface PhotoRow {
 type State =
   | { status: 'loading' }
   | { status: 'missing' }
-  | { status: 'ready'; check: CheckRow; answers: AnswerRow[]; photos: PhotoRow[]; urls: Record<string, string> };
+  | { status: 'ready'; check: CheckRow; answers: AnswerRow[]; photos: PhotoRow[]; urls: Record<string, string>; review: ReviewRow | null };
+
+interface ReviewRow {
+  outcome: ReviewStatus;
+  comment: string;
+  reviewed_at: string;
+  self_check_item_reviews: { item_id: string; decision: 'godkand' | 'brist' | 'platsbesok'; comment: string }[];
+}
+
+const DECISION_STATUS = { godkand: 'godkand', brist: 'brister', platsbesok: 'platsbesok' } as const;
 
 async function load(checkId: string): Promise<State> {
-  const [check, answers, photos] = await Promise.all([
+  const [check, answers, photos, review] = await Promise.all([
     supabase
       .from('self_checks')
       .select('id, shelter_id, inspector_name, submitted_at, ok_count, brist_count, na_count, shelters(address, kommuner(namn)), organisations(name), checklist_templates(title_sv, title_en, is_placeholder)')
@@ -52,6 +63,13 @@ async function load(checkId: string): Promise<State> {
       .maybeSingle(),
     supabase.from('self_check_answers').select('*').eq('self_check_id', checkId).order('position'),
     supabase.from('photos').select('id, item_key, storage_path').eq('context', 'self_check').eq('context_id', checkId).order('created_at'),
+    supabase
+      .from('self_check_reviews')
+      .select('outcome, comment, reviewed_at, self_check_item_reviews(item_id, decision, comment)')
+      .eq('self_check_id', checkId)
+      .order('reviewed_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
   if (!check.data) return { status: 'missing' };
   const photoRows = (photos.data ?? []) as PhotoRow[];
@@ -62,6 +80,7 @@ async function load(checkId: string): Promise<State> {
     answers: (answers.data ?? []) as AnswerRow[],
     photos: photoRows,
     urls,
+    review: (review.data as ReviewRow | null) ?? null,
   };
 }
 
@@ -90,7 +109,8 @@ export function Receipt({ checkId }: { checkId: string }) {
     );
   }
 
-  const { check, answers, photos, urls } = state;
+  const { check, answers, photos, urls, review } = state;
+  const itemReview = (itemId: string) => review?.self_check_item_reviews.find((r) => r.item_id === itemId);
   const shelterAddress = check.shelters?.address || check.shelter_id;
   const kommun = check.shelters?.kommuner?.namn ?? '';
   const photosFor = (key: string) => photos.filter((p) => p.item_key === key);
@@ -157,6 +177,20 @@ export function Receipt({ checkId }: { checkId: string }) {
       </section>
 
       <section class="card">
+        <h2>{t('receipt.reviewTitle')}</h2>
+        {review ? (
+          <>
+            <StatusBadge status={review.outcome} />
+            <p class="muted small">{t('receipt.reviewedAt', { date: formatDateTime(review.reviewed_at) })}</p>
+            {review.comment && <p class="answer-comment no-indent">{review.comment}</p>}
+          </>
+        ) : (
+          <p class="muted">{t('receipt.notReviewed')}</p>
+        )}
+        <a class="link-button" href={href('granska', check.id)}>{t('receipt.openReview')} →</a>
+      </section>
+
+      <section class="card">
         <ul class="answer-list">
           {answers.map((a) => (
             <li key={a.item_id}>
@@ -168,6 +202,12 @@ export function Receipt({ checkId }: { checkId: string }) {
                 </div>
               </div>
               {a.comment && <p class="answer-comment">{a.comment}</p>}
+              {itemReview(a.item_id) && (
+                <div class="item-review">
+                  <span class="muted small">{t('receipt.lstSays')}:</span> <StatusBadge status={DECISION_STATUS[itemReview(a.item_id)!.decision]} />
+                  {itemReview(a.item_id)!.comment && <span class="small"> {itemReview(a.item_id)!.comment}</span>}
+                </div>
+              )}
               {photosFor(a.item_key).length > 0 && (
                 <div class="photo-grid">
                   {photosFor(a.item_key).map((p) => (
