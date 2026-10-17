@@ -2,7 +2,8 @@ import { useEffect, useState } from 'preact/hooks';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { t, tn, useLang } from '../i18n';
-import { countAllDrafts, deleteAllDrafts, listDrafts, listMaintenanceDrafts } from '../lib/drafts';
+import { listDrafts, listMaintenanceDrafts } from '../lib/drafts';
+import { signOutWithDrafts } from '../lib/session';
 import { fetchOrgLog, logToCsv, profileNames } from '../lib/maintenance';
 import { downloadCsv } from '../lib/csv';
 import { formatDate, formatNumber } from '../lib/format';
@@ -147,14 +148,7 @@ export function Home({ session }: { session: Session }) {
     };
   }, [session.user.id]);
 
-  // Unsent drafts may hold deficiencies and photos. On a shared device they
-  // must not outlive the session, so signing out deletes them (after asking).
-  async function signOut() {
-    const drafts = await countAllDrafts(session.user.id).catch(() => 0);
-    if (drafts && !window.confirm(t('home.signOutDrafts', { count: drafts }))) return;
-    await deleteAllDrafts(session.user.id).catch(() => undefined);
-    await supabase.auth.signOut();
-  }
+  const signOut = () => signOutWithDrafts(session.user.id);
 
   if (state.status === 'loading') return <p class="muted">{t('home.loading')}</p>;
   if (state.status !== 'ready') {

@@ -4,15 +4,36 @@
     {
       "name": "shelters-static",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8723"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8723"
+      ],
       "port": 8723
     },
     {
       "name": "beredskap",
       "runtimeExecutable": "npm.cmd",
-      "runtimeArgs": ["--prefix", "beredskap", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "beredskap",
+        "run",
+        "dev"
+      ],
       "port": 5173,
       "url": "http://localhost:5173"
+    },
+    {
+      "name": "beredskap-preview",
+      "runtimeExecutable": "npm.cmd",
+      "runtimeArgs": [
+        "--prefix",
+        "beredskap",
+        "run",
+        "preview"
+      ],
+      "port": 4173,
+      "url": "http://localhost:4173"
     }
   ]
 }

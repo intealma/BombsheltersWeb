@@ -417,5 +417,36 @@
     "confirmDetails": "Give {kommun} access to submitted inspections, deficiencies and photos?",
     "adminOnly": "Only county board administrators can change this.",
     "failed": "That did not work: {message}"
+  },
+  "demo": {
+    "title": "Choose a role",
+    "intro": "This is a demonstration. Enter the access code you were given in the meeting and choose whose view to see.",
+    "code": "Access code",
+    "codeMissing": "Enter the access code.",
+    "wrongCode": "Wrong access code.",
+    "tooMany": "Too many attempts. Wait a while and try again.",
+    "failed": "Could not sign in. Has the demo been prepared (npm run demo:reset)?",
+    "fiction": "Organisations, people and statuses are made up. The addresses are real shelters from MCF's open data, but nothing here says anything about their actual condition.",
+    "emailLogin": "Sign in with email instead",
+    "switchRole": "Switch role",
+    "strip": "DEMO · Made-up organisations and statuses on real shelter addresses. Nothing here applies to real shelters.",
+    "role": {
+      "owner": {
+        "name": "Property owner",
+        "desc": "Demo Fastigheter AB: orders, inspections, maintenance, 48-hour plan"
+      },
+      "caretaker": {
+        "name": "Caretaker",
+        "desc": "Does the inspection on the phone and ticks off tasks"
+      },
+      "lansstyrelse": {
+        "name": "County board",
+        "desc": "Map and table of the county, orders and review"
+      },
+      "kommun": {
+        "name": "Municipality",
+        "desc": "Linköping: share of checked and approved shelters"
+      }
+    }
   }
 }

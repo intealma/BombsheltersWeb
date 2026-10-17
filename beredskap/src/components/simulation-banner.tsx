@@ -2,6 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { t, useLang } from '../i18n';
 import { fetchActiveActivation, formatCountdown, type Activation } from '../lib/readiness';
 import { href } from '../lib/router';
+import { supabase } from '../lib/supabase';
 import { useNow } from './countdown';
 
 /** Fired when a simulation is started or ended, so the banner updates at once. */
@@ -19,7 +20,13 @@ export function SimulationBanner({ userId }: { userId: string }) {
 
   useEffect(() => {
     let stopped = false;
-    const check = () => fetchActiveActivation().then((a) => !stopped && setActivation(a)).catch(() => undefined);
+    // Skip when signed out (e.g. mid "switch role"): anonymous callers are refused anyway.
+    const check = () =>
+      supabase.auth
+        .getSession()
+        .then(({ data }) => (data.session ? fetchActiveActivation() : null))
+        .then((a) => !stopped && setActivation(a))
+        .catch(() => undefined);
     check();
     const id = setInterval(check, 30_000);
     window.addEventListener('hashchange', check);

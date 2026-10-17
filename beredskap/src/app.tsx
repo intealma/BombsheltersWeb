@@ -15,6 +15,7 @@ import { NoticePage } from './views/notice';
 import { SimulationBanner } from './components/simulation-banner';
 import { useRoute } from './lib/router';
 import { ShelterMark } from './components/shelter-mark';
+import { signOutWithDrafts } from './lib/session';
 
 export function App() {
   const lang = useLang();
@@ -43,12 +44,18 @@ export function App() {
               {t('app.demo')}
             </span>
           )}
+          {isDemo && session && (
+            <button type="button" class="link-button" onClick={() => signOutWithDrafts(session.user.id).then((ok) => ok && (location.hash = '#/'))}>
+              {t('demo.switchRole')}
+            </button>
+          )}
           <button type="button" class="link-button" onClick={() => setLang(lang === 'sv' ? 'en' : 'sv')}>
             {t('lang.switch')}
           </button>
         </div>
       </header>
 
+      {isDemo && <div class="demo-strip" role="note">{t('demo.strip')}</div>}
       {session && <SimulationBanner userId={session.user.id} />}
 
       <main class={['lansstyrelse', 'granska', 'kommun'].includes(route[0]) ? 'content wide' : 'content'}>

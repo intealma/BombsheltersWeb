@@ -417,5 +417,36 @@
     "confirmDetails": "Ge {kommun} tillgång till inskickade kontroller, brister och foton?",
     "adminOnly": "Bara länsstyrelsens administratörer kan ändra insynen.",
     "failed": "Det gick inte: {message}"
+  },
+  "demo": {
+    "title": "Välj en roll",
+    "intro": "Det här är en demonstration. Ange åtkomstkoden du fått på mötet och välj vems vy du vill se.",
+    "code": "Åtkomstkod",
+    "codeMissing": "Ange åtkomstkoden.",
+    "wrongCode": "Fel åtkomstkod.",
+    "tooMany": "För många försök. Vänta en stund och försök igen.",
+    "failed": "Det gick inte att logga in. Är demon förberedd (npm run demo:reset)?",
+    "fiction": "Organisationer, personer och statusar är påhittade. Adresserna är riktiga skyddsrum från MCF:s öppna data, men inget här säger något om deras verkliga skick.",
+    "emailLogin": "Logga in med e-post i stället",
+    "switchRole": "Byt roll",
+    "strip": "DEMO · Påhittade organisationer och statusar på riktiga skyddsrumsadresser. Inget här gäller verkliga skyddsrum.",
+    "role": {
+      "owner": {
+        "name": "Fastighetsägare",
+        "desc": "Demo Fastigheter AB: förelägganden, egenkontroll, underhåll, 48-timmarsplan"
+      },
+      "caretaker": {
+        "name": "Fastighetsskötare",
+        "desc": "Gör egenkontrollen i mobilen och bockar av uppgifter"
+      },
+      "lansstyrelse": {
+        "name": "Länsstyrelse",
+        "desc": "Karta och tabell över länet, förelägganden och granskning"
+      },
+      "kommun": {
+        "name": "Kommun",
+        "desc": "Linköping: andel kontrollerade och godkända skyddsrum"
+      }
+    }
   }
 }
