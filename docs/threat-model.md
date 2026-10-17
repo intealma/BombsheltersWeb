@@ -1,6 +1,6 @@
 # Threat model: Beredskap
 
-Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 3 (maintenance log). Review at every milestone.
+Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 4 (48-hour plan). Review at every milestone.
 
 Beredskap is the login-gated part of skyddsrum.se. Property owners run self-checks
 (*förenklad kontroll*), keep maintenance logs and 48-hour plans. Länsstyrelser issue
@@ -53,6 +53,9 @@ open risks.
 | T17 | Flooding submissions or uploads. | Per-user limits in the database: 20 submissions and 100 photos an hour, 40 photos per inspection. Returns HTTP 429. | **Done** (milestone 2) |
 | T18 | Unsent drafts on a lost or shared phone. | Drafts (including photos) are kept on the device only until submitted, tied to the signed-in user, and deleted on sign-out after a warning. They are not encrypted at rest beyond what the phone provides. | Partly done; consider encrypting drafts |
 | T19 | CSV injection: a description like `=HYPERLINK(...)` runs as a formula when the export is opened in Excel. | Every CSV cell starting with `=`, `+`, `-`, `@`, tab or CR is prefixed with an apostrophe; all cells are quoted. | **Done** (milestone 3) |
+| T20 | Contact details of responsible people leak (personal data). | Contacts are readable only by the owner organisation (not the länsstyrelse or kommun); only owner admins can change them; deletion removes them from all tasks; the audit log records changes without copying name, phone or email. | **Done** (milestone 4) |
+| T21 | A simulation is mistaken for a real alert, or a real activation is triggered by accident. | A database check constraint allows only simulations; a confirmation before starting; a striped SIMULERING label on the plan and a banner on every screen; nothing is sent to anyone. | **Done** (milestone 4) |
+| T22 | Live updates bypass access control. | Progress is polled through the same RLS-protected API instead of Supabase Realtime, because Realtime does not apply RLS to DELETE events. Completions are never deleted, only switched between done and not done. | **Done** (milestone 4) |
 
 ## Open risks needing a decision
 

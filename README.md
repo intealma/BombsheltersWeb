@@ -113,6 +113,27 @@ owner admins get **Hela underhållsloggen (CSV)** for every shelter. The CSV is
 semicolon-separated UTF-8 with BOM, so it opens correctly in Swedish Excel, and
 cells that start with `=`, `+`, `-` or `@` are neutralised.
 
+### 48-hour readiness plan and simulation
+
+Owners open **48-timmarsplan** from the start page.
+
+- **Plan.** Each shelter gets five tasks from a template (placeholder until official
+  guidance exists), each with an hour by which it must be done within the 48 hours,
+  a responsible person and a backup. Owner admins create the plans for all shelters
+  in one click and assign people on each shelter page.
+- **Contact people.** Name, phone, optional email and role, and nothing more. Removing
+  a contact (GDPR) also removes them from every task. The audit log records that a
+  contact changed, but not the personal data.
+- **Aktivera höjd beredskap.** An owner admin starts a **simulation**: a 48-hour
+  countdown for the whole organisation. Caretakers tick tasks off on their phones,
+  and the plan page shows progress per task and per shelter within about 5 seconds,
+  with overdue tasks flagged. A striped SIMULERING banner is shown on every screen
+  while it runs. The database only allows simulations (`is_simulation` must be true),
+  and no messages are sent to anyone.
+
+The demo seed creates fictional contact people. Their phone numbers come from the
+series PTS reserves for fiction (070-174 06 05 to 070-174 06 99).
+
 After changing an edge function in `supabase/functions/`, restart the local stack
 (`npm run db:stop`, then `npm run db:start`) so the new code is served.
 
@@ -122,6 +143,9 @@ After changing an edge function in `supabase/functions/`, restart the local stac
 npm run db:reset          # wipes the local database and restores the demo state
 npm run seed:users        # recreate only the demo organisations, users and assignments
 ```
+
+If photo uploads fail with 503 after starting the stack, the local edge runtime has crashed.
+Restart it with `docker restart supabase_edge_runtime_beredskap`.
 
 If `npm run db:reset` stops with `DbSetupError: error running container`, run it again.
 This is an occasional Docker timing hiccup, not a problem with the data.
