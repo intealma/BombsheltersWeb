@@ -153,7 +153,8 @@ describe('organisations', () => {
     ownerAdminA: ['ownerA'],
     caretakerA: ['ownerA'],
     ownerAdminB: ['ownerB'],
-    lst05: ['lst05', 'ownerA', 'ownerB'],
+    // A länsstyrelse sees the owners of shelters in its län and the kommuner in its län.
+    lst05: ['kommun0580', 'kommun0581', 'lst05', 'ownerA', 'ownerB'],
     lst06: ['lst06'],
     kommun0580: ['kommun0580'],
     kommun0581: ['kommun0581'],
@@ -161,7 +162,7 @@ describe('organisations', () => {
     anon: [],
   };
 
-  it.each(ALL_CALLERS)('%s sees only its own organisation (and a länsstyrelse its owners)', async (caller) => {
+  it.each(ALL_CALLERS)('%s sees only its own organisation (a länsstyrelse also its owners and kommuner)', async (caller) => {
     const data = await rows<{ id: string }>(as[caller].from('organisations').select('id').in('id', Object.values(fx.orgs)));
     expect(data.map((r) => orgKey(r.id)).sort()).toEqual(expected[caller].sort());
   });
