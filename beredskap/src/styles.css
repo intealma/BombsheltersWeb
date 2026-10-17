@@ -424,3 +424,112 @@ a.button.primary-link { background: var(--white); color: #000; border-color: var
   color: var(--text-primary);
 }
 .field input[type="date"] { color-scheme: dark; }
+
+/* ---------------------------------------------------- 48-hour plan */
+.card-link { display: block; color: inherit; text-decoration: none; }
+.card-link:hover { border-color: var(--white-dim); }
+.card-link .chip { display: inline-block; margin-top: 8px; }
+.block-button { width: 100%; margin-top: 12px; }
+.section-title { margin-top: 24px; }
+
+/* A simulation is never mistaken for the real thing: striped frame and label. */
+.card.simulation {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    repeating-linear-gradient(135deg, #ffffff 0 10px, #000000 10px 20px) border-box;
+}
+.sim-badge {
+  display: inline-block;
+  background: var(--white);
+  color: #000;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  padding: 3px 10px;
+  border-radius: 3px;
+}
+.sim-running { font-weight: 600; margin: 10px 0 4px; }
+.sim-clock { text-align: center; margin: 18px 0; }
+.countdown { font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: 0.02em; }
+.countdown.big { display: block; font-size: clamp(44px, 14vw, 72px); line-height: 1.1; margin: 4px 0 6px; }
+.sim-inline { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 6px 0 10px; }
+.sim-inline .countdown { font-size: 22px; }
+
+.sim-banner-wrap { position: relative; z-index: 5; }
+.sim-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: repeating-linear-gradient(135deg, #1a1a1a 0 12px, #000 12px 24px);
+  border-bottom: 1px solid var(--white);
+  color: var(--white);
+  font-weight: 600;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 6px 0; }
+.bar span { display: block; height: 100%; background: var(--white); transition: width 0.4s ease; }
+
+.progress-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.progress-list li { padding: 10px 0; border-top: 1px solid var(--line); }
+.progress-list a { display: block; color: inherit; text-decoration: none; }
+.progress-head { display: flex; justify-content: space-between; gap: 12px; }
+.progress-title { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.progress-count { font-variant-numeric: tabular-nums; color: var(--text-muted); white-space: nowrap; font-size: 13px; }
+.progress-sub { font-size: 12.5px; color: var(--text-muted); }
+.progress-list li.overdue .progress-count, .progress-list li.overdue .progress-sub strong { color: var(--white); font-weight: 700; }
+.progress-list.compact li { padding: 8px 0; }
+
+.task-list { list-style: none; margin: 4px 0 0; padding: 0; }
+.task-list > li { padding: 14px 0; border-top: 1px solid var(--line); }
+.task-head { display: flex; flex-direction: column; gap: 2px; }
+.task-title { font-weight: 600; }
+.task-due { font-size: 12.5px; color: var(--text-muted); }
+.task-list li.overdue .task-due strong { color: var(--white); }
+.task-help { margin: 6px 0; font-size: 13.5px; color: var(--text-muted); }
+.task-people { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 8px 0; font-size: 13.5px; }
+.task-people dt { color: var(--text-faint); }
+.task-people dd { margin: 0; overflow-wrap: anywhere; }
+.task-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  margin-top: 8px;
+  padding: 0 14px;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.task-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.task-toggle.is-done { background: var(--white); color: #000; border-color: var(--white); }
+.task-undo { font-weight: 400; text-decoration: underline; }
+.task-list li.done .task-title { color: var(--text-muted); }
+
+.contact-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.contact-list > li { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.contact-list > li:has(form) { display: block; }
+.contact-name { font-weight: 600; }
+.contact-sub { font-size: 13px; color: var(--text-muted); overflow-wrap: anywhere; }
+.contact-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.contact-form, .assign-form { margin-top: 4px; }

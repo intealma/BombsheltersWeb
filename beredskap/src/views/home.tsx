@@ -54,7 +54,7 @@ type State =
     };
 
 const MODULES: Record<OrgKind, string[]> = {
-  owner: ['plan'],
+  owner: [],
   lansstyrelse: ['orders', 'overview'],
   kommun: ['overview'],
 };
@@ -256,6 +256,15 @@ export function Home({ session }: { session: Session }) {
         )}
       </section>
 
+      {isOwner && (
+        <a class="card card-link" href={href('beredskap')}>
+          <h2>{t('readiness.title')}</h2>
+          <p class="muted small">{t('readiness.intro')}</p>
+          <span class="chip">{t('readiness.open')} →</span>
+        </a>
+      )}
+
+      {MODULES[org.kind].length > 0 && (
       <section class="card">
         <h2>{t('home.comingSoon')}</h2>
         <ul class="module-list">
@@ -264,6 +273,7 @@ export function Home({ session }: { session: Session }) {
           ))}
         </ul>
       </section>
+      )}
     </div>
   );
 }

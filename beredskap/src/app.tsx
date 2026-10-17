@@ -8,6 +8,8 @@ import { SelfCheck } from './views/self-check';
 import { Receipt } from './views/receipt';
 import { ShelterPage } from './views/shelter';
 import { MaintenanceForm } from './views/maintenance-form';
+import { ReadinessPage } from './views/readiness';
+import { SimulationBanner } from './components/simulation-banner';
 import { useRoute } from './lib/router';
 import { ShelterMark } from './components/shelter-mark';
 
@@ -44,6 +46,8 @@ export function App() {
         </div>
       </header>
 
+      {session && <SimulationBanner userId={session.user.id} />}
+
       <main class="content">
         {session === undefined ? (
           <p class="muted">{t('home.loading')}</p>
@@ -55,6 +59,8 @@ export function App() {
           <MaintenanceForm key={route[1]} shelterId={route[1]} session={session} />
         ) : route[0] === 'skyddsrum' && route[1] && !route[2] ? (
           <ShelterPage key={route[1]} shelterId={route[1]} session={session} />
+        ) : route[0] === 'beredskap' ? (
+          <ReadinessPage session={session} />
         ) : route[0] === 'kontroll' && route[1] ? (
           <Receipt key={route[1]} checkId={route[1]} />
         ) : (

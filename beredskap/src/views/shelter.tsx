@@ -10,6 +10,7 @@ import { categoryLabel, fetchLog, logToCsv, profileNames, voidEntry, type EntryP
 import { downloadCsv } from '../lib/csv';
 import { downloadMaintenancePdf } from '../lib/pdf';
 import { PhotoThumb } from '../components/photos';
+import { ShelterPlan } from './shelter-plan';
 
 interface ShelterInfo {
   id: string;
@@ -242,6 +243,8 @@ export function ShelterPage({ shelterId, session }: { shelterId: string; session
           </ul>
         )}
       </section>
+
+      {canAct && <ShelterPlan shelterId={shelter.id} session={session} />}
 
       <section class="card">
         <div class="card-head">
