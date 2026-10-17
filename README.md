@@ -71,7 +71,7 @@ Sign in with one of the demo users. The password is `DEMO_PASSWORD` from your `.
 | `agare@example.com` | Fastighetsägare | Demo Fastigheter AB |
 | `skotare@example.com` | Fastighetsskötare | Demo Fastigheter AB |
 | `brf@example.com` | Fastighetsägare | Demo BRF Exempelgården |
-| `lansstyrelse@example.com` | Handläggare | Demo Länsstyrelse Östergötland |
+| `lansstyrelse@example.com` | Administratör, länsstyrelse | Demo Länsstyrelse Östergötland |
 | `kommun@example.com` | Kommun | Demo Kommun Linköping |
 
 Supabase Studio (database UI) runs at <http://127.0.0.1:54323>.
@@ -158,6 +158,25 @@ The owner opens the link, signs in, and sees the shelters in that order with
 "Starta egenkontroll". The link only points to the order: someone from another
 organisation who opens it sees nothing. Owners also see the review result on the
 receipt and the status of every shelter on their start page.
+
+### Kommun view
+
+Sign in as `kommun@example.com` and open **Beredskapsöversikt**: the share of
+shelters checked and approved, places in approved shelters, a map, and a list of
+approved shelters to inform residents with.
+
+What a kommun sees is a **policy** that a länsstyrelse admin sets per kommun, in the
+"Kommunernas insyn" panel on the länsstyrelse dashboard:
+
+| Level | The kommun sees |
+|---|---|
+| **Översiktlig** (default) | Aggregates, and per shelter only "Godkänd" or "Ej godkänd ännu". A deficient shelter looks exactly like one not yet checked. |
+| Status per skyddsrum | Also each shelter's full status, but no answers, comments or photos. |
+| Status, brister och foton | Also the submitted self-checks, deficiencies, photos and reviews. |
+
+Kommuner get their data through two database functions that return exactly what the
+level allows. The highest level works by widening the access rules, and only for
+self-check data in that kommun; maintenance logs and plans are never shown.
 
 After changing an edge function in `supabase/functions/`, restart the local stack
 (`npm run db:stop`, then `npm run db:start`) so the new code is served.

@@ -1,6 +1,6 @@
 # Threat model: Beredskap
 
-Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 5 (länsstyrelse dashboard). Review at every milestone.
+Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 6 (kommun view). Review at every milestone.
 
 Beredskap is the login-gated part of skyddsrum.se. Property owners run self-checks
 (*förenklad kontroll*), keep maintenance logs and 48-hour plans. Länsstyrelser issue
@@ -42,7 +42,7 @@ open risks.
 | T6 | Sensitive data leaks through public endpoints, the public GeoJSON or the JS bundle. | The public GeoJSON is checked for its four allowed properties; the build refuses secret keys in `VITE_*`; a test scans the bundle for secret keys. | **Done** |
 | T7 | Tampering with history (backdated maintenance, deleted findings). | Append-only audit log written by triggers; updates and deletes are rejected even for the service role. Server-side timestamps. Submitted self-checks, their answers and photo records cannot be updated by anyone, including the service role. Maintenance entries are append-only: a mistake is voided with a reason by an owner admin and stays visible; the work date and the server registration time are both shown and exported, so backdating is visible. | **Done** (milestones 1–3) |
 | T8 | Photo leaks: public bucket URLs, GPS coordinates in EXIF. | Private bucket; signed URLs valid 5 minutes, issued only to the owner organisation and the länsstyrelse; no storage write policies, so files can only be stored by the edge function. EXIF is dropped on the phone (canvas re-encode) and again on the server (APP1–APP15, comments and trailing data removed). JPEG only, 5 MB max. Tested end to end. | **Done** (milestone 2) |
-| T9 | A kommun user sees deficiency details. | Kommun policies expose only aggregate status; details behind a configurable policy that defaults to off. | Milestone 6 |
+| T9 | A kommun user sees deficiency details. | By default a kommun only gets aggregates and "approved / not yet" per shelter, through functions that coarsen the data in the database; a deficient shelter is indistinguishable from an unchecked one. Full status and details are separate policy levels, off by default. Tested at every level, including that switching back removes access. | **Done** (milestone 6) |
 | T10 | Credential stuffing or brute force. | Supabase Auth rate limits; strong password policy (12+ characters, mixed case and digits). Planned: MFA for länsstyrelse users. | Partly done |
 | T11 | XSS steals the session (stored in localStorage). | Strict CSP without inline scripts, Preact escaping by default, no `dangerouslySetInnerHTML`, self-hosted fonts. | CSP at deploy (milestone 7) |
 | T12 | Abuse of the order link. | The link holds a random 24-character token that only identifies the order; it grants nothing. Opening it requires signing in as a member of the owner organisation, and RLS shows the order to nobody else (tested with another owner's account). Submitting is checked in the database. | **Done** (milestones 2 and 5) |
@@ -58,6 +58,8 @@ open risks.
 | T22 | Live updates bypass access control. | Progress is polled through the same RLS-protected API instead of Supabase Realtime, because Realtime does not apply RLS to DELETE events. Completions are never deleted, only switched between done and not done. | **Done** (milestone 4) |
 | T23 | A länsstyrelse orders or reviews shelters outside its län, or someone else issues orders in its name. | Order and review functions check the caller is an inspector or admin of that länsstyrelse and that each shelter lies in its län; shelters outside are skipped and counted. Tested for owners, kommuner, other län and anonymous callers. | **Done** (milestone 5) |
 | T24 | Review results are altered after the fact. | Reviews and item decisions are append-only (updates rejected even for the service role); a new review supersedes the old and both stay in the history and the audit log. | **Done** (milestone 5) |
+| T25 | Someone widens a kommun's access without authority. | Only a länsstyrelse admin for the kommun's län can change the level (not inspectors, owners, other län or the kommun itself); every change is audited with who made it; switching to the details level asks for confirmation. | **Done** (milestone 6) |
+| T26 | Aggregates leak detail (e.g. checked minus approved hints at deficiencies). | Accepted: the spec asks for shares checked and approved per kommun, and the counts are not tied to individual shelters at the default level. Revisit if kommuner become very small. | Accepted risk |
 
 ## Open risks needing a decision
 
