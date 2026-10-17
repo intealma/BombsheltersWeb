@@ -9,7 +9,7 @@ import { Receipt } from './views/receipt';
 import { ShelterPage } from './views/shelter';
 import { MaintenanceForm } from './views/maintenance-form';
 import { ReadinessPage } from './views/readiness';
-import { LazyDashboard } from './views/lazy-dashboard';
+import { LazyDashboard, LazyKommun } from './views/lazy-dashboard';
 import { ReviewPage } from './views/review';
 import { NoticePage } from './views/notice';
 import { SimulationBanner } from './components/simulation-banner';
@@ -51,7 +51,7 @@ export function App() {
 
       {session && <SimulationBanner userId={session.user.id} />}
 
-      <main class={route[0] === 'lansstyrelse' || route[0] === 'granska' ? 'content wide' : 'content'}>
+      <main class={['lansstyrelse', 'granska', 'kommun'].includes(route[0]) ? 'content wide' : 'content'}>
         {session === undefined ? (
           <p class="muted">{t('home.loading')}</p>
         ) : !session ? (
@@ -62,6 +62,8 @@ export function App() {
           <MaintenanceForm key={route[1]} shelterId={route[1]} session={session} />
         ) : route[0] === 'skyddsrum' && route[1] && !route[2] ? (
           <ShelterPage key={route[1]} shelterId={route[1]} session={session} />
+        ) : route[0] === 'kommun' ? (
+          <LazyKommun session={session} />
         ) : route[0] === 'lansstyrelse' ? (
           <LazyDashboard session={session} />
         ) : route[0] === 'granska' && route[1] ? (

@@ -59,7 +59,7 @@ type State =
 const MODULES: Record<OrgKind, string[]> = {
   owner: [],
   lansstyrelse: [],
-  kommun: ['overview'],
+  kommun: [],
 };
 
 async function loadHome(userId: string): Promise<State> {
@@ -198,6 +198,7 @@ export function Home({ session }: { session: Session }) {
         <button type="button" class="secondary" onClick={signOut}>{t('home.signOut')}</button>
       </section>
 
+      {isOwner && (
       <section class="card">
         <div class="card-head">
           <h2>{title}</h2>
@@ -272,6 +273,15 @@ export function Home({ session }: { session: Session }) {
           </>
         )}
       </section>
+      )}
+
+      {org.kind === 'kommun' && (
+        <a class="card card-link" href={href('kommun')}>
+          <h2>{t('kommun.cardTitle')}</h2>
+          <p class="muted small">{t('kommun.cardIntro')}</p>
+          <span class="chip">{t('kommun.open')} →</span>
+        </a>
+      )}
 
       {org.kind === 'lansstyrelse' && (
         <a class="card card-link" href={href('lansstyrelse')}>

@@ -28,3 +28,11 @@ export function receiptNumber(id: string): string {
 export function checkCounts(ok: number, brist: number, na: number): string {
   return [t('check.countOk', { n: ok }), tn('check.countBrist', brist), tn('check.countNa', na)].join(' · ');
 }
+
+/** "37 %", or with one decimal below 10 % so a small share never reads as zero ("0,3 %"). */
+export function formatPercent(n: number, total: number): string {
+  if (!total || !n) return `0 %`;
+  const v = (n / total) * 100;
+  const digits = v < 10 ? 1 : 0;
+  return `${v.toLocaleString(locale(), { minimumFractionDigits: digits, maximumFractionDigits: digits })} %`;
+}

@@ -22,7 +22,7 @@ const USERS = [
   { email: 'agare@example.com', name: 'Anna Ägare (demo)', org: 'owner', role: 'owner_admin' },
   { email: 'skotare@example.com', name: 'Sam Skötare (demo)', org: 'owner', role: 'caretaker' },
   { email: 'brf@example.com', name: 'Bo Brf (demo)', org: 'brf', role: 'owner_admin' },
-  { email: 'lansstyrelse@example.com', name: 'Lina Länsstyrelse (demo)', org: 'lst', role: 'inspector' },
+  { email: 'lansstyrelse@example.com', name: 'Lina Länsstyrelse (demo)', org: 'lst', role: 'lst_admin' },
   { email: 'kommun@example.com', name: 'Kim Kommun (demo)', org: 'kommun', role: 'kommun_viewer' },
 ];
 

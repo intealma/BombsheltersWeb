@@ -35,8 +35,7 @@
     "startCheck": "Inspection",
     "comingSoon": "Coming next",
     "modules": {
-      "orders": "Orders and review",
-      "overview": "Readiness overview"
+      "orders": "Orders and review"
     },
     "open": "Open"
   },
@@ -280,7 +279,8 @@
     "inskickad": "Submitted",
     "godkand": "Approved",
     "brister": "Deficiencies",
-    "platsbesok": "Site visit required"
+    "platsbesok": "Site visit required",
+    "ej_godkand": "Not approved yet"
   },
   "lst": {
     "cardTitle": "County board overview",
@@ -379,5 +379,43 @@
     "cancelled": "The order has been withdrawn.",
     "start": "Start inspection",
     "notFound": "The order does not exist, or you are signed in with an account that does not belong to the organisation it concerns."
+  },
+  "kommun": {
+    "cardTitle": "Readiness overview",
+    "cardIntro": "Share of checked and approved shelters in the municipality, and a map.",
+    "open": "Open the overview",
+    "forbidden": "The overview is only available to municipality users.",
+    "eyebrow": "Readiness overview",
+    "title": "Shelters in {kommun}",
+    "level": {
+      "coarse": "Overview: you see whether a shelter is approved or not yet. Deficiencies and photos are not shown. The county board decides what the municipality may see.",
+      "status": "You see each shelter's status, but not which deficiencies there are, nor any photos. The county board decides what the municipality may see.",
+      "details": "The county board has given the municipality access to submitted inspections, deficiencies and photos for shelters in the municipality."
+    },
+    "shelters": "Shelters",
+    "places": "{count} places",
+    "checked": "Checked",
+    "approved": "Approved",
+    "approvedPlaces": "Places in approved",
+    "ofTotal": "{n} of {total}",
+    "approvedList": "Approved shelters ({count})",
+    "approvedIntro": "Shelters the county board has approved after a simplified inspection. A basis for informing residents.",
+    "noneApproved": "No shelters are approved yet.",
+    "showMore": "Show more ({shown} of {total})",
+    "checksTitle": "Submitted inspections ({count})"
+  },
+  "kommunPolicy": {
+    "title": "What municipalities see",
+    "intro": "Decide what each municipality in the county may see. The default is an overview: approved or not yet, without deficiencies.",
+    "level": {
+      "coarse": "Overview (default)",
+      "status": "Status per shelter",
+      "details": "Status, deficiencies and photos"
+    },
+    "levelFor": "Access for {kommun}",
+    "changed": "changed {date}",
+    "confirmDetails": "Give {kommun} access to submitted inspections, deficiencies and photos?",
+    "adminOnly": "Only county board administrators can change this.",
+    "failed": "That did not work: {message}"
   }
 }

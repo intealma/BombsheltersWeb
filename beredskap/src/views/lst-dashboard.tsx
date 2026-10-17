@@ -18,6 +18,7 @@ import {
 } from '../lib/orders';
 import { StatusBadge, StatusShape } from '../components/status-badge';
 import { StatusMap } from '../components/status-map';
+import { KommunPolicyPanel } from '../components/kommun-policy-panel';
 
 const POLL_MS = 5000;
 const PAGE = 100;
@@ -30,6 +31,7 @@ interface Org {
   id: string;
   name: string;
   lanName: string;
+  isAdmin: boolean;
 }
 
 function inDays(days: number): string {
@@ -119,16 +121,16 @@ export function LstDashboard({ session }: { session: Session }) {
         .from('memberships')
         .select('role, organisations(id, name, kind, lan_kod)')
         .eq('user_id', session.user.id);
-      const lst = ((memberships ?? []) as unknown as { organisations: { id: string; name: string; kind: string; lan_kod: string } | null }[])
-        .map((m) => m.organisations)
-        .find((o) => o?.kind === 'lansstyrelse');
+      const membership = ((memberships ?? []) as unknown as { role: string; organisations: { id: string; name: string; kind: string; lan_kod: string } | null }[])
+        .find((m) => m.organisations?.kind === 'lansstyrelse');
+      const lst = membership?.organisations;
       if (!lst) return !cancelled && setPhase('forbidden');
       const [{ data: lan }, all] = await Promise.all([
         supabase.from('lan').select('namn').eq('kod', lst.lan_kod).single(),
         fetchStatusRows(),
       ]);
       if (cancelled) return;
-      setOrg({ id: lst.id, name: lst.name, lanName: lan?.namn ?? lst.lan_kod });
+      setOrg({ id: lst.id, name: lst.name, lanName: lan?.namn ?? lst.lan_kod, isAdmin: membership!.role === 'lst_admin' });
       setRows(new Map(all.map((r) => [r.shelter_id, r])));
       setLastSync(new Date());
       setPhase('ready');
@@ -352,6 +354,7 @@ export function LstDashboard({ session }: { session: Session }) {
               </ul>
             )}
           </section>
+          <KommunPolicyPanel isAdmin={org.isAdmin} />
         </aside>
       </div>
 

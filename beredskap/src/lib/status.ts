@@ -4,9 +4,15 @@
 export const STATUSES = ['ej_forelagd', 'forelagd', 'forsenad', 'inskickad', 'godkand', 'brister', 'platsbesok'] as const;
 export type ReviewStatus = (typeof STATUSES)[number];
 
+// What a kommun sees by default: approved, or not (yet). "Not yet" covers
+// unchecked, ordered, submitted and deficient alike, so nothing leaks.
+export const COARSE_STATUSES = ['ej_godkand', 'godkand'] as const;
+export type MapStatus = ReviewStatus | 'ej_godkand';
+export const MAP_STATUSES: MapStatus[] = [...STATUSES, 'ej_godkand'];
+
 export type Shape = 'circle' | 'square' | 'triangle' | 'diamond';
 
-export const STATUS_STYLE: Record<ReviewStatus, { color: string; shape: Shape; filled: boolean; glyph: '' | '!' | '✓' | '•' | 'P' }> = {
+export const STATUS_STYLE: Record<MapStatus, { color: string; shape: Shape; filled: boolean; glyph: '' | '!' | '✓' | '•' | 'P' }> = {
   ej_forelagd: { color: '#8b919c', shape: 'circle', filled: false, glyph: '' },
   forelagd: { color: '#7fb2ff', shape: 'square', filled: false, glyph: '' },
   forsenad: { color: '#ffb238', shape: 'square', filled: true, glyph: '!' },
@@ -14,6 +20,7 @@ export const STATUS_STYLE: Record<ReviewStatus, { color: string; shape: Shape; f
   godkand: { color: '#4fd17a', shape: 'circle', filled: true, glyph: '✓' },
   brister: { color: '#ff6b6b', shape: 'triangle', filled: true, glyph: '!' },
   platsbesok: { color: '#d69bff', shape: 'diamond', filled: true, glyph: 'P' },
+  ej_godkand: { color: '#a3a9b3', shape: 'circle', filled: false, glyph: '' },
 };
 
 function shapePath(ctx: CanvasRenderingContext2D, shape: Shape, c: number, r: number) {
@@ -35,7 +42,7 @@ function shapePath(ctx: CanvasRenderingContext2D, shape: Shape, c: number, r: nu
 }
 
 /** Map icon for a status, drawn on a canvas at the device pixel ratio. */
-export function statusIconImage(status: ReviewStatus, pixelRatio: number): { width: number; height: number; data: Uint8ClampedArray } {
+export function statusIconImage(status: MapStatus, pixelRatio: number): { width: number; height: number; data: Uint8ClampedArray } {
   const style = STATUS_STYLE[status];
   const size = Math.round(22 * pixelRatio);
   const canvas = document.createElement('canvas');

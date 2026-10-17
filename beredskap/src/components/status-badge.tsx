@@ -1,8 +1,8 @@
 import { t } from '../i18n';
-import { STATUS_STYLE, type ReviewStatus } from '../lib/status';
+import { STATUS_STYLE, type MapStatus } from '../lib/status';
 
 /** The same shape and symbol as the map icon, as inline SVG. */
-export function StatusShape({ status, size = 16 }: { status: ReviewStatus; size?: number }) {
+export function StatusShape({ status, size = 16 }: { status: MapStatus; size?: number }) {
   const s = STATUS_STYLE[status];
   const fill = s.filled ? s.color : 'transparent';
   const stroke = s.filled ? '#000' : s.color;
@@ -24,7 +24,7 @@ export function StatusShape({ status, size = 16 }: { status: ReviewStatus; size?
 }
 
 /** Icon plus label: never colour alone. */
-export function StatusBadge({ status }: { status: ReviewStatus }) {
+export function StatusBadge({ status }: { status: MapStatus }) {
   return (
     <span class={`status-badge status-${status}`}>
       <StatusShape status={status} />

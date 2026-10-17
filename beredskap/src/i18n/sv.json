@@ -35,8 +35,7 @@
     "startCheck": "Egenkontroll",
     "comingSoon": "Kommer härnäst",
     "modules": {
-      "orders": "Förelägganden och granskning",
-      "overview": "Beredskapsöversikt"
+      "orders": "Förelägganden och granskning"
     },
     "open": "Öppna"
   },
@@ -280,7 +279,8 @@
     "inskickad": "Inskickad",
     "godkand": "Godkänd",
     "brister": "Brister",
-    "platsbesok": "Platsbesök krävs"
+    "platsbesok": "Platsbesök krävs",
+    "ej_godkand": "Ej godkänd ännu"
   },
   "lst": {
     "cardTitle": "Länsstyrelsens översikt",
@@ -379,5 +379,43 @@
     "cancelled": "Föreläggandet är återkallat.",
     "start": "Starta egenkontroll",
     "notFound": "Föreläggandet finns inte, eller så är du inloggad med ett konto som inte hör till den organisation det gäller."
+  },
+  "kommun": {
+    "cardTitle": "Beredskapsöversikt",
+    "cardIntro": "Andel kontrollerade och godkända skyddsrum i kommunen, och en karta.",
+    "open": "Öppna översikten",
+    "forbidden": "Översikten finns bara för kommunens användare.",
+    "eyebrow": "Beredskapsöversikt",
+    "title": "Skyddsrum i {kommun}",
+    "level": {
+      "coarse": "Översiktlig vy: ni ser om ett skyddsrum är godkänt eller inte ännu. Brister och foton visas inte. Länsstyrelsen bestämmer vad kommunen får se.",
+      "status": "Ni ser varje skyddsrums status, men inte vilka brister som finns eller några foton. Länsstyrelsen bestämmer vad kommunen får se.",
+      "details": "Länsstyrelsen har gett kommunen tillgång till inskickade kontroller, brister och foton för skyddsrummen i kommunen."
+    },
+    "shelters": "Skyddsrum",
+    "places": "{count} platser",
+    "checked": "Kontrollerade",
+    "approved": "Godkända",
+    "approvedPlaces": "Platser i godkända",
+    "ofTotal": "{n} av {total}",
+    "approvedList": "Godkända skyddsrum ({count})",
+    "approvedIntro": "Skyddsrum som länsstyrelsen har godkänt efter förenklad kontroll. Underlag för information till invånarna.",
+    "noneApproved": "Inga skyddsrum är godkända ännu.",
+    "showMore": "Visa fler ({shown} av {total})",
+    "checksTitle": "Inskickade kontroller ({count})"
+  },
+  "kommunPolicy": {
+    "title": "Kommunernas insyn",
+    "intro": "Bestäm vad varje kommun i länet får se. Standard är översiktlig: godkänt eller inte ännu, utan brister.",
+    "level": {
+      "coarse": "Översiktlig (standard)",
+      "status": "Status per skyddsrum",
+      "details": "Status, brister och foton"
+    },
+    "levelFor": "Insyn för {kommun}",
+    "changed": "ändrad {date}",
+    "confirmDetails": "Ge {kommun} tillgång till inskickade kontroller, brister och foton?",
+    "adminOnly": "Bara länsstyrelsens administratörer kan ändra insynen.",
+    "failed": "Det gick inte: {message}"
   }
 }

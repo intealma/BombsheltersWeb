@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { LngLatBounds, Map as MlMap, NavigationControl, setWorkerUrl, type GeoJSONSource, type StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
-import { STATUSES, statusIconImage, type ReviewStatus } from '../lib/status';
+import { MAP_STATUSES, statusIconImage, type MapStatus } from '../lib/status';
 
 // The worker file is self-contained; tell MapLibre where Vite put it.
 setWorkerUrl(workerUrl);
@@ -13,7 +13,7 @@ export interface MapPoint {
   shelter_id: string;
   lon: number;
   lat: number;
-  status: ReviewStatus;
+  status: MapStatus;
 }
 
 /** The same six-layer monochrome basemap as the public map. */
@@ -98,7 +98,7 @@ export function StatusMap(props: {
 
       map.on('load', () => {
         const ratio = window.devicePixelRatio || 1;
-        for (const s of STATUSES) map!.addImage(`st-${s}`, statusIconImage(s, ratio), { pixelRatio: ratio });
+        for (const s of MAP_STATUSES) map!.addImage(`st-${s}`, statusIconImage(s, ratio), { pixelRatio: ratio });
         map!.addSource('shelters', { type: 'geojson', data: toGeoJSON([], new Set()) });
         map!.addLayer({
           id: 'selected-ring', type: 'circle', source: 'shelters', filter: ['==', ['get', 'selected'], true],
