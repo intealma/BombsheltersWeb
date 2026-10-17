@@ -1,8 +1,10 @@
-// Creates the fictional demo organisations, their users and shelter
-// assignments. Safe to re-run: existing demo data is removed first.
+// Creates the fictional demo organisations, their users, shelter
+// assignments and 48-hour plans. Safe to re-run: existing demo data
+// (including demo photo files) is removed first. seed-demo.mjs then adds
+// orders, self-checks, reviews and maintenance on top.
 //
-//   npm run seed:users          (after the database is up)
-//   npm run db:reset            (wipes the database, then runs this)
+//   npm run demo:reset          (this, then seed-demo.mjs)
+//   npm run db:reset            (wipes the database, then demo:reset)
 //
 // The password for every demo user comes from DEMO_PASSWORD in .env.
 // Every name here is fictional. Do not add real companies or people.
@@ -14,6 +16,8 @@ import { supabaseEnv } from './local-env.mjs';
 const ORGS = [
   { key: 'owner', kind: 'owner', name: 'Demo Fastigheter AB' },
   { key: 'brf', kind: 'owner', name: 'Demo BRF Exempelgården' },
+  { key: 'norrkoping', kind: 'owner', name: 'Demo Bostäder Norrköping AB' },
+  { key: 'motala', kind: 'owner', name: 'Demo Fastighets AB Motala' },
   { key: 'lst', kind: 'lansstyrelse', name: 'Demo Länsstyrelse Östergötland', lan_kod: '05' },
   { key: 'kommun', kind: 'kommun', name: 'Demo Kommun Linköping', kommun_kod: '0580' },
 ];
@@ -22,6 +26,8 @@ const USERS = [
   { email: 'agare@example.com', name: 'Anna Ägare (demo)', org: 'owner', role: 'owner_admin' },
   { email: 'skotare@example.com', name: 'Sam Skötare (demo)', org: 'owner', role: 'caretaker' },
   { email: 'brf@example.com', name: 'Bo Brf (demo)', org: 'brf', role: 'owner_admin' },
+  { email: 'norrkoping@example.com', name: 'Nils Norrköping (demo)', org: 'norrkoping', role: 'owner_admin' },
+  { email: 'motala@example.com', name: 'Mia Motala (demo)', org: 'motala', role: 'owner_admin' },
   { email: 'lansstyrelse@example.com', name: 'Lina Länsstyrelse (demo)', org: 'lst', role: 'lst_admin' },
   { email: 'kommun@example.com', name: 'Kim Kommun (demo)', org: 'kommun', role: 'kommun_viewer' },
 ];
@@ -45,8 +51,13 @@ async function must(promise, what) {
   return data;
 }
 
-// 1. Remove previous demo data. Deleting the organisations cascades to their
-//    memberships and shelter assignments.
+// 1. Remove previous demo data. Deleting the organisations cascades to
+//    everything that belongs to them; photo files are removed explicitly.
+const oldDemoOrgs = (await must(admin.from('organisations').select('id').eq('is_demo', true), 'list demo organisations')).map((o) => o.id);
+if (oldDemoOrgs.length) {
+  const paths = (await must(admin.from('photos').select('storage_path').in('owner_org_id', oldDemoOrgs).limit(10000), 'list demo photos')).map((p) => p.storage_path);
+  for (let i = 0; i < paths.length; i += 100) await admin.storage.from('photos').remove(paths.slice(i, i + 100));
+}
 const demoEmails = new Set(USERS.map((u) => u.email));
 for (let page = 1; ; page++) {
   const { users } = await must(admin.auth.admin.listUsers({ page, perPage: 1000 }), 'list users');
@@ -78,29 +89,37 @@ for (const u of USERS) {
 }
 
 // 4. Shelter assignments, deterministic so every reset gives the same demo:
-//    Demo Fastigheter AB gets every 8th Linköping shelter, the BRF gets three
-//    of the ones in between.
-// The API returns at most 1000 rows per request, so page through.
-const linkoping = [];
-for (let from = 0; ; from += 1000) {
-  const page = await must(
-    admin.from('shelters').select('id').eq('kommun_kod', '0580').order('id').range(from, from + 999),
-    'list Linköping shelters',
-  );
-  linkoping.push(...page);
-  if (page.length < 1000) break;
+//    Demo Fastigheter AB gets every 8th Linköping shelter and the BRF three of
+//    the ones in between; the Norrköping and Motala companies get every 8th
+//    and every 5th shelter in their kommun.
+async function sheltersIn(kommunKod) {
+  // The API returns at most 1000 rows per request, so page through.
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    const page = await must(
+      admin.from('shelters').select('id').eq('kommun_kod', kommunKod).order('id').range(from, from + 999),
+      `list shelters in ${kommunKod}`,
+    );
+    out.push(...page);
+    if (page.length < 1000) return out;
+  }
 }
+const linkoping = await sheltersIn('0580');
 if (linkoping.length === 0) fail('No Linköping shelters found. Did the seed in supabase/seed/ run?');
 
 const ownerShelters = linkoping.filter((_, i) => i % 8 === 0).map((s) => s.id);
 const brfShelters = linkoping.filter((_, i) => i % 8 === 4).slice(0, 3).map((s) => s.id);
-await must(
-  admin.from('shelter_assignments').insert([
-    ...ownerShelters.map((id) => ({ shelter_id: id, owner_org_id: orgId.owner })),
-    ...brfShelters.map((id) => ({ shelter_id: id, owner_org_id: orgId.brf })),
-  ]),
-  'assign shelters',
-);
+const norrkopingShelters = (await sheltersIn('0581')).filter((_, i) => i % 8 === 0).map((s) => s.id);
+const motalaShelters = (await sheltersIn('0583')).filter((_, i) => i % 5 === 0).map((s) => s.id);
+const assignments = [
+  ...ownerShelters.map((id) => ({ shelter_id: id, owner_org_id: orgId.owner })),
+  ...brfShelters.map((id) => ({ shelter_id: id, owner_org_id: orgId.brf })),
+  ...norrkopingShelters.map((id) => ({ shelter_id: id, owner_org_id: orgId.norrkoping })),
+  ...motalaShelters.map((id) => ({ shelter_id: id, owner_org_id: orgId.motala })),
+];
+for (let i = 0; i < assignments.length; i += 500) {
+  await must(admin.from('shelter_assignments').insert(assignments.slice(i, i + 500)), 'assign shelters');
+}
 
 // 5. 48-hour plans: fictional contact people, a plan for every demo shelter
 //    and someone responsible plus a backup for each task. The phone numbers
@@ -160,7 +179,7 @@ for (let i = 0; i < taskRows.length; i += 500) {
   await must(admin.from('readiness_tasks').insert(taskRows.slice(i, i + 500)), 'create readiness tasks');
 }
 
-console.log(`Demo data ready: ${ORGS.length} organisations, ${USERS.length} users, ` +
-  `${ownerShelters.length} + ${brfShelters.length} assigned shelters, ${taskRows.length} plan tasks.`);
+console.log(`Demo organisations ready: ${ORGS.length} organisations, ${USERS.length} users, ` +
+  `${assignments.length} assigned shelters, ${taskRows.length} plan tasks.`);
 console.log('Users (password = DEMO_PASSWORD in .env):');
 for (const u of USERS) console.log(`  ${u.email.padEnd(26)} ${u.role}`);
