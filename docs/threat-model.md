@@ -1,6 +1,6 @@
 # Threat model: Beredskap
 
-Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 6 (kommun view). Review at every milestone.
+Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 7 (demo). Review at every milestone.
 
 Beredskap is the login-gated part of skyddsrum.se. Property owners run self-checks
 (*förenklad kontroll*), keep maintenance logs and 48-hour plans. Länsstyrelser issue
@@ -44,9 +44,9 @@ open risks.
 | T8 | Photo leaks: public bucket URLs, GPS coordinates in EXIF. | Private bucket; signed URLs valid 5 minutes, issued only to the owner organisation and the länsstyrelse; no storage write policies, so files can only be stored by the edge function. EXIF is dropped on the phone (canvas re-encode) and again on the server (APP1–APP15, comments and trailing data removed). JPEG only, 5 MB max. Tested end to end. | **Done** (milestone 2) |
 | T9 | A kommun user sees deficiency details. | By default a kommun only gets aggregates and "approved / not yet" per shelter, through functions that coarsen the data in the database; a deficient shelter is indistinguishable from an unchecked one. Full status and details are separate policy levels, off by default. Tested at every level, including that switching back removes access. | **Done** (milestone 6) |
 | T10 | Credential stuffing or brute force. | Supabase Auth rate limits; strong password policy (12+ characters, mixed case and digits). Planned: MFA for länsstyrelse users. | Partly done |
-| T11 | XSS steals the session (stored in localStorage). | Strict CSP without inline scripts, Preact escaping by default, no `dangerouslySetInnerHTML`, self-hosted fonts. | CSP at deploy (milestone 7) |
+| T11 | XSS steals the session (stored in localStorage). | Content Security Policy in every production build (scripts only from the site itself, no inline scripts, `object-src 'none'`, `base-uri 'none'`), plus header-only rules in `dist/_headers` (`frame-ancestors 'none'`, HSTS). Preact escapes output by default; no `dangerouslySetInnerHTML`; fonts self-hosted. Checked for every role on a production build. | **Done** (milestone 7) |
 | T12 | Abuse of the order link. | The link holds a random 24-character token that only identifies the order; it grants nothing. Opening it requires signing in as a member of the owner organisation, and RLS shows the order to nobody else (tested with another owner's account). Submitting is checked in the database. | **Done** (milestones 2 and 5) |
-| T13 | Demo data is mistaken for real inspection results (fictional "brister" on real addresses). | Demo behind an access code, "DEMO – fiktiva statusar" on every screen, fictional organisations only, never on the public domain without login. | Milestone 7 |
+| T13 | Demo data is mistaken for real inspection results (fictional "brister" on real addresses). | The demo sits behind an access code; a DEMO strip on every screen says the organisations and statuses are made up; DEMO badge and PDF marking; fictional names, `example.com` addresses and phone numbers from PTS's fiction series (all tested); placeholder photos stamped DEMOBILD. | **Done** (milestone 7) |
 | T14 | Hosting under foreign jurisdiction (US CLOUD Act). | Data stored in Stockholm (eu-north-1). Everything that matters is plain Postgres (SQL migrations, RLS), so it can move to Swedish-owned hosting. See `docs/hosting.md`. | Documented; decision before production |
 | T15 | Personal data is kept longer or more broadly than needed (GDPR). | Minimal fields (name, phone); profiles visible only to colleagues; deleting a user removes their profile; profiles are not copied into the audit log. Export and deletion tooling planned. | Partly done |
 | T16 | Forged or malformed submissions (missing items, fake photos, oversized input). | One database function validates everything: every checklist item answered exactly once, valid statuses, comments ≤ 2000 characters, control characters stripped, and a stored photo for every deficiency. A retried submit is idempotent. | **Done** (milestone 2) |
@@ -60,6 +60,7 @@ open risks.
 | T24 | Review results are altered after the fact. | Reviews and item decisions are append-only (updates rejected even for the service role); a new review supersedes the old and both stay in the history and the audit log. | **Done** (milestone 5) |
 | T25 | Someone widens a kommun's access without authority. | Only a länsstyrelse admin for the kommun's län can change the level (not inspectors, owners, other län or the kommun itself); every change is audited with who made it; switching to the details level asks for confirmation. | **Done** (milestone 6) |
 | T26 | Aggregates leak detail (e.g. checked minus approved hints at deficiencies). | Accepted: the spec asks for shares checked and approved per kommun, and the counts are not tied to individual shelters at the default level. Revisit if kommuner become very small. | Accepted risk |
+| T27 | The demo login is abused to get into a project with real data. | `demo-login` only works when `DEMO_MODE=true` and only signs in as the four fixed demo users; the access code is compared in constant time, failures are throttled per IP, and the demo password never reaches the browser. Never set `DEMO_MODE` on a production project. | **Done** (milestone 7); keep `DEMO_MODE` off outside the demo |
 
 ## Open risks needing a decision
 

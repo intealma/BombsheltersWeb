@@ -52,10 +52,19 @@ npx supabase status       # copy "API URL" and the anon/publishable key into .en
 ```
 
 In `.env`, also set `DEMO_PASSWORD` (12+ characters with lower case, upper case and
-digits). Then load the database:
+digits) and `DEMO_ACCESS_CODE` (the code you share in meetings). Then create the
+local secrets for the edge functions:
 
 ```powershell
-npm run db:reset          # migrations + Östergötland shelters + demo users
+Copy-Item supabase/functions/.env.example supabase/functions/.env   # same DEMO_PASSWORD and DEMO_ACCESS_CODE
+npm run db:stop
+npm run db:start          # restart so the functions pick up the secrets
+```
+
+Then load the database:
+
+```powershell
+npm run db:reset          # migrations + Östergötland shelters + the whole demo
 ```
 
 ### Run
@@ -64,15 +73,29 @@ npm run db:reset          # migrations + Östergötland shelters + demo users
 npm run dev               # http://localhost:5173/beredskap/
 ```
 
-Sign in with one of the demo users. The password is `DEMO_PASSWORD` from your `.env`.
+### Demo login
+
+The login page shows a **role switcher**: enter the access code (`DEMO_ACCESS_CODE`)
+and pick Fastighetsägare, Fastighetsskötare, Länsstyrelse or Kommun. **Byt roll** in the
+top bar switches role without retyping the code (it is remembered for the browser tab).
+The demo password never reaches the browser: a small edge function (`demo-login`)
+checks the code and signs you in. It only runs when `DEMO_MODE=true`.
+
+A striped DEMO strip and the DEMO badge are on every screen, and every PDF is marked.
+
+You can also sign in with email; the password is `DEMO_PASSWORD`:
 
 | Email | Role | Organisation (fictional) |
 |---|---|---|
 | `agare@example.com` | Fastighetsägare | Demo Fastigheter AB |
 | `skotare@example.com` | Fastighetsskötare | Demo Fastigheter AB |
 | `brf@example.com` | Fastighetsägare | Demo BRF Exempelgården |
+| `norrkoping@example.com` | Fastighetsägare | Demo Bostäder Norrköping AB |
+| `motala@example.com` | Fastighetsägare | Demo Fastighets AB Motala |
 | `lansstyrelse@example.com` | Administratör, länsstyrelse | Demo Länsstyrelse Östergötland |
 | `kommun@example.com` | Kommun | Demo Kommun Linköping |
+
+See [docs/demo-script.md](docs/demo-script.md) for a 15-minute walkthrough of the meeting.
 
 Supabase Studio (database UI) runs at <http://127.0.0.1:54323>.
 
@@ -184,9 +207,15 @@ After changing an edge function in `supabase/functions/`, restart the local stac
 ### Seed and reset
 
 ```powershell
-npm run db:reset          # wipes the local database and restores the demo state
-npm run seed:users        # recreate only the demo organisations, users and assignments
+npm run demo:reset        # restores the demo state (keeps the schema); works on hosted too
+npm run db:reset          # wipes the local database, re-applies migrations, then demo:reset
 ```
+
+The demo is deterministic: every reset gives the same picture, with dates relative to
+today. Across Östergötland it has about 115 ordered shelters, 17 overdue, 11 waiting for
+review, 37 approved, 11 with deficiencies and 4 needing a site visit, plus a year of
+maintenance history and a 48-hour plan for every Demo Fastigheter AB shelter. The photos
+are drawn placeholders stamped DEMOBILD (`python scripts/make_demo_photos.py`).
 
 If photo uploads fail with 503 after starting the stack, the local edge runtime has crashed.
 Restart it with `docker restart supabase_edge_runtime_beredskap`.
@@ -205,9 +234,10 @@ python scripts/build_shelter_seed.py --lan 05 06  # several län
 ### Test
 
 ```powershell
-npm test                  # access control, self-checks, photos, database guarantees, public data
+npm test                  # access control, every feature, the demo, database guarantees, public data
 npm run typecheck
-npm run build
+npm run build             # production build with Content Security Policy and dist/_headers
+npm run preview           # serve the build on http://localhost:4173/beredskap/ (CSP active)
 ```
 
 The tests create and remove their own organisations, users and shelters. They refuse to
