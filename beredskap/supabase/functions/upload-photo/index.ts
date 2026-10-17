@@ -17,7 +17,7 @@ const SHELTER_ID = /^[0-9A-Za-z-]{1,32}$/;
 const ITEM_KEY = /^[a-z0-9_-]{0,40}$/;
 const CONTEXTS = new Set(['self_check', 'maintenance']);
 
-const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? 'http://localhost:5173,http://127.0.0.1:5173')
+const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);

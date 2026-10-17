@@ -396,6 +396,12 @@ enabled = true
 # the database as that user before storing anything.
 verify_jwt = true
 
+[functions.demo-login]
+enabled = true
+# Called before sign-in, so no user token. Guarded by an access code instead,
+# and switched off entirely unless DEMO_MODE=true (supabase/functions/.env).
+verify_jwt = false
+
 [analytics]
 enabled = false
 port = 54327
