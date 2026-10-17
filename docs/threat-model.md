@@ -1,6 +1,6 @@
 # Threat model: Beredskap
 
-Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 4 (48-hour plan). Review at every milestone.
+Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 5 (länsstyrelse dashboard). Review at every milestone.
 
 Beredskap is the login-gated part of skyddsrum.se. Property owners run self-checks
 (*förenklad kontroll*), keep maintenance logs and 48-hour plans. Länsstyrelser issue
@@ -45,7 +45,7 @@ open risks.
 | T9 | A kommun user sees deficiency details. | Kommun policies expose only aggregate status; details behind a configurable policy that defaults to off. | Milestone 6 |
 | T10 | Credential stuffing or brute force. | Supabase Auth rate limits; strong password policy (12+ characters, mixed case and digits). Planned: MFA for länsstyrelse users. | Partly done |
 | T11 | XSS steals the session (stored in localStorage). | Strict CSP without inline scripts, Preact escaping by default, no `dangerouslySetInnerHTML`, self-hosted fonts. | CSP at deploy (milestone 7) |
-| T12 | Abuse of the self-check link. | The link only identifies the order. Opening it requires sign-in as a member of the owning organisation. Submitting is checked in the database (owner admin or caretaker of the assigned organisation). | Submission rules **done** (milestone 2); order links in milestone 5 |
+| T12 | Abuse of the order link. | The link holds a random 24-character token that only identifies the order; it grants nothing. Opening it requires signing in as a member of the owner organisation, and RLS shows the order to nobody else (tested with another owner's account). Submitting is checked in the database. | **Done** (milestones 2 and 5) |
 | T13 | Demo data is mistaken for real inspection results (fictional "brister" on real addresses). | Demo behind an access code, "DEMO – fiktiva statusar" on every screen, fictional organisations only, never on the public domain without login. | Milestone 7 |
 | T14 | Hosting under foreign jurisdiction (US CLOUD Act). | Data stored in Stockholm (eu-north-1). Everything that matters is plain Postgres (SQL migrations, RLS), so it can move to Swedish-owned hosting. See `docs/hosting.md`. | Documented; decision before production |
 | T15 | Personal data is kept longer or more broadly than needed (GDPR). | Minimal fields (name, phone); profiles visible only to colleagues; deleting a user removes their profile; profiles are not copied into the audit log. Export and deletion tooling planned. | Partly done |
@@ -56,6 +56,8 @@ open risks.
 | T20 | Contact details of responsible people leak (personal data). | Contacts are readable only by the owner organisation (not the länsstyrelse or kommun); only owner admins can change them; deletion removes them from all tasks; the audit log records changes without copying name, phone or email. | **Done** (milestone 4) |
 | T21 | A simulation is mistaken for a real alert, or a real activation is triggered by accident. | A database check constraint allows only simulations; a confirmation before starting; a striped SIMULERING label on the plan and a banner on every screen; nothing is sent to anyone. | **Done** (milestone 4) |
 | T22 | Live updates bypass access control. | Progress is polled through the same RLS-protected API instead of Supabase Realtime, because Realtime does not apply RLS to DELETE events. Completions are never deleted, only switched between done and not done. | **Done** (milestone 4) |
+| T23 | A länsstyrelse orders or reviews shelters outside its län, or someone else issues orders in its name. | Order and review functions check the caller is an inspector or admin of that länsstyrelse and that each shelter lies in its län; shelters outside are skipped and counted. Tested for owners, kommuner, other län and anonymous callers. | **Done** (milestone 5) |
+| T24 | Review results are altered after the fact. | Reviews and item decisions are append-only (updates rejected even for the service role); a new review supersedes the old and both stay in the history and the audit log. | **Done** (milestone 5) |
 
 ## Open risks needing a decision
 

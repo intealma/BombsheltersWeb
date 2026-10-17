@@ -134,6 +134,31 @@ Owners open **48-timmarsplan** from the start page.
 The demo seed creates fictional contact people. Their phone numbers come from the
 series PTS reserves for fiction (070-174 06 05 to 070-174 06 99).
 
+### Länsstyrelse dashboard (desktop)
+
+Sign in as `lansstyrelse@example.com` and open **Länsstyrelsens översikt**.
+
+- **Map and table** of every shelter in the län, coloured by status: Ej förelagd,
+  Förelagd, Försenad, Inskickad, Godkänd, Brister, Platsbesök krävs. Each status also
+  has its own shape and symbol, so colour is never the only cue.
+- **Filters:** kommun, status, free-text search. Sort by status, capacity, due date,
+  submission date or number of deficiencies, and export the list as CSV.
+- **Orders (förelägganden):** select shelters in the table, click them on the map,
+  Shift-drag a box on the map, or "Välj alla i listan" for a whole kommun. Choose a
+  due date and create the orders. You get **one unique link per owner** to copy;
+  no email is sent in the demo. Shelters without a registered owner, or with an open
+  order already, are skipped and counted.
+- **Live:** the dashboard checks for changes every 5 seconds. A submitted self-check
+  appears as Inskickad, and the row flashes.
+- **Review** item by item: Godkänd, Brist or Platsbesök krävs, with comments. The
+  outcome follows from the items (a site visit weighs most). Reviews cannot be
+  edited; a new review replaces the old one, and both are kept.
+
+The owner opens the link, signs in, and sees the shelters in that order with
+"Starta egenkontroll". The link only points to the order: someone from another
+organisation who opens it sees nothing. Owners also see the review result on the
+receipt and the status of every shelter on their start page.
+
 After changing an edge function in `supabase/functions/`, restart the local stack
 (`npm run db:stop`, then `npm run db:start`) so the new code is served.
 
