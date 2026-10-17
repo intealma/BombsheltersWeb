@@ -193,45 +193,16 @@
   .checkin-elsewhere{display:none;font-size:12px;color:var(--text-faint);}
   .checkin-error{margin-top:10px;font-size:12px;color:#ff6b6b;}
 
-  /* Calm dashboard: large hero number, plain label/value rows, color used
-     only for the three need/fullness levels — everything else stays
-     neutral gray/white so nothing competes for attention. */
+  /* Occupancy: one coarse, delayed level. Color only for the three levels;
+     everything else stays neutral gray/white. */
   .level-red{color:#ff5c5c !important;}
   .level-orange{color:#ffa64d !important;}
   .level-green{color:#4ade80 !important;}
 
   .occ-hero{text-align:center;padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line);}
-  .occ-hero-numbers{font-family:var(--font-ui);font-weight:700;font-size:38px;line-height:1;color:var(--white);letter-spacing:-0.01em;}
-  .occ-hero-sep{color:var(--text-faint);font-weight:400;margin:0 5px;}
+  .occ-level{font-family:var(--font-ui);font-weight:700;font-size:26px;line-height:1.1;color:var(--white);letter-spacing:-0.01em;}
   .occ-hero-label{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.08em;margin-top:7px;}
-  .occ-bar-track{height:7px;border-radius:4px;background:#1a1c22;margin-top:16px;overflow:hidden;}
-  .occ-bar-fill{height:100%;border-radius:4px;background:#4ade80;transition:width .5s ease, background .3s ease;width:0%;}
-  .occ-bar-fill.level-orange{background:#ffa64d;}
-  .occ-bar-fill.level-red{background:#ff5c5c;}
-  .occ-hero-pct{font-size:11.5px;color:var(--text-muted);margin-top:9px;}
-
-  .dash-card{margin-bottom:20px;}
-  .dash-card:last-of-type{margin-bottom:16px;}
-  .dash-card-title{
-    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
-    color:var(--white);margin-bottom:6px;
-  }
-  .dash-row{
-    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
-    padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);
-  }
-  .dash-row:last-child{border-bottom:none;}
-  .dash-row-label{font-size:12.5px;color:var(--text-muted);}
-  .dash-row-value{font-family:var(--font-ui);font-weight:600;font-size:13px;color:var(--white);text-align:right;}
-  .dash-empty{font-size:12px;color:var(--text-faint);padding:4px 0;}
-
-  .dash-activity{display:flex;flex-direction:column;}
-  .activity-row{
-    display:flex;justify-content:space-between;gap:12px;font-size:12.5px;
-    padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--text-muted);
-  }
-  .activity-row:last-child{border-bottom:none;}
-  .activity-time{color:var(--text-faint);flex-shrink:0;}
+  .occ-note{font-size:11.5px;line-height:1.45;color:var(--text-muted);margin-top:9px;}
 
   .modal-overlay{
     position:fixed;inset:0;z-index:50;
@@ -469,37 +440,16 @@
 
   <div class="panel-checkin" id="panelCheckin">
     <div class="occ-hero">
-      <div class="occ-hero-numbers"><span id="occCurrent">–</span><span class="occ-hero-sep">/</span><span id="occCapacity">–</span></div>
-      <div class="occ-hero-label">People sheltered</div>
-      <div class="occ-bar-track"><div class="occ-bar-fill" id="occBarFill"></div></div>
-      <div class="occ-hero-pct" id="occPct"></div>
-    </div>
-
-    <div class="dash-card">
-      <div class="dash-card-title">Current Needs</div>
-      <div class="dash-rows" id="needsRows"></div>
-    </div>
-
-    <div class="dash-card">
-      <div class="dash-card-title">People &amp; Skills</div>
-      <div class="dash-rows" id="peopleRows"></div>
-    </div>
-
-    <div class="dash-card">
-      <div class="dash-card-title">Resources</div>
-      <div class="dash-rows" id="resourceRows"></div>
-    </div>
-
-    <div class="dash-card">
-      <div class="dash-card-title">Recent Activity</div>
-      <div class="dash-activity" id="activityRows"></div>
+      <div class="occ-level" id="occLevel">–</div>
+      <div class="occ-hero-label">Occupancy</div>
+      <div class="occ-note" id="occNote"></div>
     </div>
 
     <div class="checkin-form" id="checkinForm">
       <button class="panel-btn checkin-btn" id="checkinBtn">I'm here — check in</button>
     </div>
     <div class="checkin-active" id="checkinActive">
-      <div class="checkin-active-text">You're checked in here.</div>
+      <div class="checkin-active-text">You're checked in here. Your check-in is private; it only adds to the delayed level above.</div>
       <button class="panel-btn checkin-btn checkout" id="checkoutBtn">Check out</button>
     </div>
     <div class="checkin-elsewhere" id="checkinElsewhere">You're already checked in at another shelter.</div>
@@ -518,13 +468,14 @@
       </div>
     </div>
     <div class="modal-body">
+      <div class="modal-hint">Private: only you and the site operator can see your answers.</div>
       <div class="modal-section-title">Basic Info &amp; Safety</div>
       <div class="modal-field-row">
         <label class="modal-num-field">Adults
-          <input type="number" id="ciAdults" min="1" value="1">
+          <input type="number" id="ciAdults" min="1" max="20" value="1">
         </label>
         <label class="modal-num-field">Children (under 15)
-          <input type="number" id="ciChildren" min="0" value="0">
+          <input type="number" id="ciChildren" min="0" max="30" value="0">
         </label>
       </div>
       <div class="modal-toggle-row">
@@ -1001,17 +952,16 @@ function renderPanelSteps(route) {
   el.classList.add("show");
 }
 
-// --- Live shelter check-in (Supabase) -------------------------------
+// --- Shelter check-in (Supabase) ------------------------------------
 // See supabase/schema.sql for the security model. Short version: every
 // browser gets a real, server-issued anonymous identity (auth.uid()); the
 // database — not this client code — enforces one active check-in per
-// identity and that nobody can edit anyone else's row.
+// identity, that only you can read or close your own check-in, and that
+// the public only ever sees a delayed, coarse occupancy level.
 
 let myUserId = null;
 let myActiveCheckin = null;
-let occupancyChannel = null;
 let panelShelterId = null;
-let panelShelterCapacity = null; // last known real capacity for panelShelterId — re-renders after check-in/out pass null and reuse this instead of losing it
 
 // Only creates a NEW anonymous identity (the captcha-gated step) if none
 // exists yet — an existing session is picked up for free, so returning
@@ -1039,192 +989,62 @@ async function refreshMyActiveCheckin() {
   myActiveCheckin = data || null;
 }
 
-async function fetchShelterStatus(shelterId) {
+// The server publishes a level only for shelters that are filling up or
+// full, 30–45 minutes late, and nothing while the operator has switched
+// publishing off ("Public occupancy" in supabase/schema.sql). Returns null
+// when it can't be loaded, so "unknown" never reads as "space available".
+async function fetchOccupancy(shelterId) {
   if (!supabaseClient) return null;
-  const { data, error } = await supabaseClient
-    .from("shelter_status")
-    .select("*")
-    .eq("shelter_id", shelterId)
-    .maybeSingle();
-  if (error) console.warn("fetchShelterStatus failed", error);
-  return data || {
-    shelter_id: shelterId, checkin_count: 0, current_occupancy: 0, adults_count: 0, children_count: 0,
-    special_needs_count: 0, medical_count: 0, leadership_count: 0, technical_count: 0,
-    community_count: 0, volunteer_count: 0,
-    water_none_count: 0, water_1_3l_count: 0, water_4l_plus_count: 0,
-    food_none_count: 0, food_1day_count: 0, food_2plus_count: 0,
-    power_bank_count: 0, first_aid_kit_count: 0, radio_count: 0, flashlight_count: 0
-  };
+  const [pub, load] = await Promise.all([
+    supabaseClient.from("occupancy_publication").select("enabled, as_of").maybeSingle(),
+    supabaseClient.from("shelter_load").select("level").eq("shelter_id", shelterId).maybeSingle()
+  ]);
+  if (pub.error || load.error) { console.warn("fetchOccupancy failed", pub.error || load.error); return null; }
+  if (!pub.data || !pub.data.enabled) return { enabled: false };
+  return { enabled: true, asOf: pub.data.as_of, level: load.data ? load.data.level : "space" };
 }
 
-async function fetchShelterActivity(shelterId) {
-  if (!supabaseClient) return [];
-  const { data, error } = await supabaseClient
-    .from("shelter_activity")
-    .select("checked_in_at, people_count")
-    .eq("shelter_id", shelterId)
-    .order("checked_in_at", { ascending: false })
-    .limit(50);
-  if (error) { console.warn("fetchShelterActivity failed", error); return []; }
-  return data || [];
-}
+const OCC_LEVELS = {
+  space:   { label: "Space available", cls: "level-green" },
+  filling: { label: "Filling up", cls: "level-orange" },
+  full:    { label: "Full", cls: "level-red" }
+};
 
-function subscribeOccupancy(shelterId) {
-  if (occupancyChannel) { supabaseClient.removeChannel(occupancyChannel); occupancyChannel = null; }
-  if (!supabaseClient) return;
-  occupancyChannel = supabaseClient
-    .channel("checkins-" + shelterId)
-    .on("postgres_changes",
-      { event: "*", schema: "public", table: "checkins", filter: `shelter_id=eq.${shelterId}` },
-      async () => {
-        if (panelShelterId !== shelterId) return;
-        renderDashboard(await fetchShelterStatus(shelterId));
-        renderActivity(await fetchShelterActivity(shelterId));
-      })
-    .subscribe();
-}
-
-function formatRelativeTime(iso) {
-  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins} min ago`;
-  const hrs = Math.round(mins / 60);
-  return `${hrs} hour${hrs > 1 ? "s" : ""} ago`;
-}
-
-// Low/Moderate/Good based on the share of check-ins (parties, not people)
-// reporting none vs. plenty of a shared resource — a simple, readable
-// stand-in for "does this shelter currently lack this," not a precise
-// per-person consumption estimate.
-function resourceLevel(noneCount, midCount, goodCount) {
-  const total = noneCount + midCount + goodCount;
-  if (total === 0) return { label: "No data yet", cls: "" };
-  if (noneCount / total >= 0.5) return { label: "Low", cls: "level-red" };
-  if (goodCount / total >= 0.5) return { label: "Good", cls: "level-green" };
-  return { label: "Moderate", cls: "level-orange" };
-}
-
-function dashRow(label, value, cls) {
-  return `<div class="dash-row"><span class="dash-row-label">${label}</span><span class="dash-row-value${cls ? " " + cls : ""}">${value}</span></div>`;
-}
-
-function renderOccupancyHero(status, capacity) {
-  document.getElementById("occCurrent").textContent = status.current_occupancy;
-  document.getElementById("occCapacity").textContent = capacity != null ? capacity : "–";
-  const pctEl = document.getElementById("occPct");
-  const barEl = document.getElementById("occBarFill");
-  barEl.classList.remove("level-orange", "level-red");
-  if (capacity != null && capacity > 0) {
-    const pct = status.current_occupancy / capacity;
-    pctEl.textContent = `${Math.round(pct * 100)}% full`;
-    barEl.style.width = Math.min(pct, 1) * 100 + "%";
-    if (pct >= 1) barEl.classList.add("level-red");
-    else if (pct >= 0.7) barEl.classList.add("level-orange");
+// `occ` undefined = still loading, null = couldn't load.
+function renderOccupancy(occ) {
+  const levelEl = document.getElementById("occLevel");
+  const noteEl = document.getElementById("occNote");
+  levelEl.classList.remove("level-green", "level-orange", "level-red");
+  if (occ === undefined) {
+    levelEl.textContent = "–";
+    noteEl.textContent = "";
+  } else if (!occ) {
+    levelEl.textContent = "Unavailable";
+    noteEl.textContent = "Occupancy can't be loaded right now.";
+  } else if (!occ.enabled) {
+    levelEl.textContent = "Not published";
+    noteEl.textContent = "To protect people in shelters, occupancy is only ever shown with a delay, and is switched off at heightened alert.";
   } else {
-    pctEl.textContent = "";
-    barEl.style.width = "0%";
+    const level = OCC_LEVELS[occ.level] || OCC_LEVELS.space;
+    const asOf = new Date(occ.asOf).toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+    levelEl.textContent = level.label;
+    levelEl.classList.add(level.cls);
+    noteEl.textContent = `As of ${asOf}. Shown 30–45 minutes late to protect people in shelters.`;
   }
 }
 
-function renderNeeds(status) {
-  const water = resourceLevel(status.water_none_count, status.water_1_3l_count, status.water_4l_plus_count);
-  const food = resourceLevel(status.food_none_count, status.food_1day_count, status.food_2plus_count);
-  const medicalCls = status.medical_count > 0 ? "level-green" : "level-red";
-  document.getElementById("needsRows").innerHTML =
-    dashRow("Water", water.label, water.cls) +
-    dashRow("Food", food.label, food.cls) +
-    dashRow("Medical staff", status.medical_count > 0 ? `${status.medical_count} available` : "None available", medicalCls);
-}
-
-function renderPeopleSkills(status) {
-  document.getElementById("peopleRows").innerHTML =
-    dashRow("Adults", status.adults_count) +
-    dashRow("Children", status.children_count) +
-    dashRow("Medical", status.medical_count) +
-    dashRow("Leadership", status.leadership_count) +
-    dashRow("Technical", status.technical_count) +
-    dashRow("Community", status.community_count) +
-    dashRow("Volunteers", status.volunteer_count) +
-    dashRow("Special needs", status.special_needs_count, status.special_needs_count > 0 ? "level-orange" : "");
-}
-
-// Point estimates from the categorical brought-amounts (we only collect
-// buckets, not exact quantities): "none" contributes 0, "1-3l" counts as 2L,
-// "4l_plus" counts as a conservative 4L floor since it's open-ended above.
-// Same idea for food, in days-of-supply rather than liters.
-function renderResources(status) {
-  const totalLiters = status.water_1_3l_count * 2 + status.water_4l_plus_count * 4;
-  const totalFoodDays = status.food_1day_count * 1 + status.food_2plus_count * 2;
-  document.getElementById("resourceRows").innerHTML =
-    dashRow("Water", `≈ ${totalLiters} L total`) +
-    dashRow("Food", `≈ ${totalFoodDays} days total`) +
-    dashRow("Power banks", status.power_bank_count) +
-    dashRow("First aid kits", status.first_aid_kit_count) +
-    dashRow("Radios", status.radio_count) +
-    dashRow("Flashlights", status.flashlight_count);
-}
-
-function renderDashboard(status) {
-  renderOccupancyHero(status, panelShelterCapacity);
-  renderNeeds(status);
-  renderPeopleSkills(status);
-  renderResources(status);
-}
-
-// Groups raw check-in events into rolling time buckets (default-open events
-// close to each other in time collapse into one line, e.g. a batch of
-// arrivals an hour ago reads as one entry, not fifty) — aggregate, no
-// individual attribution, matching the "no per-person data" direction.
-function bucketActivity(events, bucketMinutes) {
-  const bucketMs = bucketMinutes * 60 * 1000;
-  const buckets = [];
-  let current = null;
-  events.forEach((e) => {
-    const t = new Date(e.checked_in_at).getTime();
-    if (current && current.latestT - t < bucketMs) {
-      current.people += e.people_count;
-      current.latestT = Math.max(current.latestT, t);
-    } else {
-      current = { latestT: t, people: e.people_count };
-      buckets.push(current);
-    }
-  });
-  return buckets;
-}
-
-function renderActivity(events) {
-  const el = document.getElementById("activityRows");
-  if (!events.length) {
-    el.innerHTML = `<div class="dash-empty">No activity yet.</div>`;
-    return;
-  }
-  const buckets = bucketActivity(events, 10).slice(0, 6);
-  el.innerHTML = buckets.map((b) => `
-    <div class="activity-row">
-      <span class="activity-time">${formatRelativeTime(new Date(b.latestT).toISOString())}</span>
-      <span>${b.people} ${b.people === 1 ? "person" : "people"} checked in</span>
-    </div>
-  `).join("");
-}
-
-async function renderCheckinSection(shelterId, capacity) {
+async function renderCheckinSection(shelterId) {
   panelShelterId = shelterId;
-  if (capacity != null) panelShelterCapacity = capacity;
   const section = document.getElementById("panelCheckin");
   if (!supabaseClient) {
-    section.innerHTML = `<div class="checkin-disabled">Live check-in isn't configured yet.</div>`;
+    section.innerHTML = `<div class="checkin-disabled">Check-in isn't configured yet.</div>`;
     return;
   }
 
-  const [status, activity] = await Promise.all([
-    fetchShelterStatus(shelterId),
-    fetchShelterActivity(shelterId)
-  ]);
-  renderDashboard(status);
-  renderActivity(activity);
-  subscribeOccupancy(shelterId);
-
-  await refreshMyActiveCheckin();
+  renderOccupancy(undefined);
+  const [occ] = await Promise.all([fetchOccupancy(shelterId), refreshMyActiveCheckin()]);
+  if (panelShelterId !== shelterId) return; // another shelter was opened meanwhile
+  renderOccupancy(occ);
   document.getElementById("checkinError").textContent = "";
   const form = document.getElementById("checkinForm");
   const active = document.getElementById("checkinActive");
@@ -1233,7 +1053,7 @@ async function renderCheckinSection(shelterId, capacity) {
 
   const isMember = myActiveCheckin && myActiveCheckin.shelter_id === shelterId;
   if (isMember) {
-    active.style.display = "";
+    active.style.display = "block"; // "" would fall back to the stylesheet's display:none and hide Check out
   } else if (myActiveCheckin) {
     elsewhere.style.display = "block";
   } else {
@@ -1288,8 +1108,8 @@ document.getElementById("checkinModalSubmit").addEventListener("click", async ()
 
   const adults = parseInt(document.getElementById("ciAdults").value, 10);
   const children = parseInt(document.getElementById("ciChildren").value, 10);
-  if (!Number.isFinite(adults) || adults < 1) { errEl.textContent = "Adults must be at least 1."; return; }
-  if (!Number.isFinite(children) || children < 0) { errEl.textContent = "Children can't be negative."; return; }
+  if (!Number.isFinite(adults) || adults < 1 || adults > 20) { errEl.textContent = "Adults must be between 1 and 20."; return; }
+  if (!Number.isFinite(children) || children < 0 || children > 30) { errEl.textContent = "Children must be between 0 and 30."; return; }
 
   const specialNeeds = document.querySelector('#ciSpecialNeedsToggle .toggle-btn.active').dataset.value === "true";
   const roles = [...document.querySelectorAll(".ci-role:checked")].map((cb) => cb.value);
@@ -1329,7 +1149,7 @@ document.getElementById("checkinModalSubmit").addEventListener("click", async ()
     return;
   }
   closeCheckinModal();
-  await renderCheckinSection(panelShelterId, null);
+  await renderCheckinSection(panelShelterId);
 });
 // ----------------------------------------------------------------------
 
@@ -1346,7 +1166,7 @@ document.getElementById("checkoutBtn").addEventListener("click", async () => {
     .is("checked_out_at", null);
   btn.disabled = false;
   if (error) { console.warn("Check-out failed", error); errEl.textContent = "Check-out failed: " + error.message; return; }
-  await renderCheckinSection(panelShelterId, null);
+  await renderCheckinSection(panelShelterId);
 });
 
 // Only picks up an EXISTING session on load (no captcha involved in just
@@ -1369,7 +1189,7 @@ function openPanel(props, coords, route){
   document.getElementById("appleMapsBtn").href =
     `https://maps.apple.com/?daddr=${coords[1]},${coords[0]}&dirflg=d`;
   renderPanelSteps(route);
-  if (props.id) renderCheckinSection(props.id, props.capacity);
+  if (props.id) renderCheckinSection(props.id);
   document.getElementById("panel").classList.add("open");
 }
 document.getElementById("panelClose").addEventListener("click", () => {
@@ -1644,24 +1464,24 @@ async function fetchTravelMatrix(mode, start, candidates) {
   }
 }
 
-async function fetchShelterStatusMap(shelterIds) {
-  if (!supabaseClient || !shelterIds.length) return new Map();
+// Ids among `shelterIds` that the delayed public level marks as full.
+// Empty while occupancy isn't published or can't be loaded — routing then
+// just doesn't skip anything.
+async function fetchFullShelterIds(shelterIds) {
+  if (!supabaseClient || !shelterIds.length) return new Set();
   const { data, error } = await supabaseClient
-    .from("shelter_status")
-    .select("shelter_id, current_occupancy")
+    .from("shelter_load")
+    .select("shelter_id")
+    .eq("level", "full")
     .in("shelter_id", shelterIds);
-  if (error) { console.warn("fetchShelterStatusMap failed", error); return new Map(); }
-  return new Map((data || []).map((r) => [r.shelter_id, r.current_occupancy]));
+  if (error) { console.warn("fetchFullShelterIds failed", error); return new Set(); }
+  return new Set((data || []).map((r) => r.shelter_id));
 }
 
-// Candidates beyond however many we actually checked default to "not full"
-// (occupancyMap has no entry for them) — safe, since we simply don't know
-// their status rather than wrongly assuming the worst.
-function isShelterFull(item, occupancyMap) {
-  const capacity = item.feature.properties.capacity;
-  if (!capacity) return false;
-  const occ = occupancyMap.get(item.feature.properties.id) || 0;
-  return occ >= capacity;
+// Shelters without a published "full" level count as not full — safe, since
+// we simply don't know rather than wrongly assuming the worst.
+function isShelterFull(item, fullIds) {
+  return fullIds.has(item.feature.properties.id);
 }
 
 // How a route is ranked when picking the "best" 3 shelters: real trip time
@@ -1694,7 +1514,7 @@ const TRANSIT_CANDIDATE_COUNT = 8; // no matrix endpoint for transit — routed 
 let nearestAnimReq = null;
 let locateActive = false;
 let lastUserCoord = null;
-let currentNearest = null;    // top 3 by real travel time (and live capacity), for the active mode
+let currentNearest = null;    // top 3 by real travel time (skipping shelters published as full), for the active mode
 let currentRoutes = null;     // routes matching currentNearest, same order
 let currentTransportMode = "walking";
 const routeCache = {};
@@ -1790,7 +1610,7 @@ function updateModeBarUI(mode) {
 // Ranks a wide straight-line candidate pool (30 for walk/bike/car, via one
 // cached Table-API matrix call; 8 for transit, routed individually since
 // ResRobot has no matrix endpoint) by REAL travel time, skips any that are
-// already full at their live capacity, then shows the ranked list
+// published as full (delayed level), then shows the ranked list
 // IMMEDIATELY using the matrix's own time/distance numbers — before waiting
 // on full route geometry for the drawn line, which turns out to be the slow
 // part (each OSRM /route call on the free public mirror runs well over
@@ -1816,20 +1636,20 @@ async function loadRoutesForMode(mode, isPrefetch) {
     // separate "fast estimate" phase possible here, each candidate's real
     // trip is already in hand by the time we know the ranking.
     const pool = findNearestShelters(lastUserCoord, TRANSIT_CANDIDATE_COUNT);
-    const [routes, occupancyMap] = await Promise.all([
+    const [routes, fullIds] = await Promise.all([
       mapWithConcurrency(pool, 4, (item) => {
         const key = mode + "|" + origin + "|" + item.feature.properties.id;
         if (!routeCache[key]) routeCache[key] = fetchRoute(mode, lastUserCoord, item.feature.geometry.coordinates);
         return routeCache[key];
       }),
-      fetchShelterStatusMap(pool.map((item) => item.feature.properties.id))
+      fetchFullShelterIds(pool.map((item) => item.feature.properties.id))
     ]);
     if (!isPrefetch && mode !== currentTransportMode) return;
 
     const rankedPool = pool
       .map((item, i) => ({ item, route: routes[i] }))
       .sort((a, b) => routeRankMinutes(a.route) - routeRankMinutes(b.route));
-    const available = rankedPool.filter((r) => !isShelterFull(r.item, occupancyMap));
+    const available = rankedPool.filter((r) => !isShelterFull(r.item, fullIds));
     const fullSkippedCount = rankedPool.length - available.length;
     const chosen = (available.length >= 3 ? available : rankedPool).slice(0, 3);
     if (isPrefetch) return;
@@ -1848,9 +1668,9 @@ async function loadRoutesForMode(mode, isPrefetch) {
   const wide = findNearestShelters(lastUserCoord, MATRIX_CANDIDATE_COUNT);
   const mKey = mode + "|" + origin;
   if (!matrixCache[mKey]) matrixCache[mKey] = fetchTravelMatrix(mode, lastUserCoord, wide.map((item) => item.feature.geometry.coordinates));
-  const [matrix, occupancyMap] = await Promise.all([
+  const [matrix, fullIds] = await Promise.all([
     matrixCache[mKey],
-    fetchShelterStatusMap(wide.map((item) => item.feature.properties.id))
+    fetchFullShelterIds(wide.map((item) => item.feature.properties.id))
   ]);
 
   if (!isPrefetch && mode !== currentTransportMode) return;
@@ -1864,7 +1684,7 @@ async function loadRoutesForMode(mode, isPrefetch) {
     })
     .sort((a, b) => a.time - b.time);
 
-  const available = rankedPool.filter((r) => !isShelterFull(r.item, occupancyMap));
+  const available = rankedPool.filter((r) => !isShelterFull(r.item, fullIds));
   const fullSkippedCount = rankedPool.length - available.length;
   const chosen = (available.length >= 3 ? available : rankedPool).slice(0, 3);
   const fetchGeometryFor = (r) => {

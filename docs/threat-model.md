@@ -1,12 +1,12 @@
 # Threat model: Beredskap
 
-Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 7 (demo). Review at every milestone.
+Status: draft for Phase 1 (demo MVP), October 2026. Updated after milestone 7 (demo) and the public map's occupancy fix (T28–T29). Review at every milestone.
 
 Beredskap is the login-gated part of skyddsrum.se. Property owners run self-checks
 (*förenklad kontroll*), keep maintenance logs and 48-hour plans. Länsstyrelser issue
 orders and review results. Kommuner see aggregate readiness. The public map is a
-separate, unauthenticated page and is out of scope here, except where noted under
-open risks.
+separate, unauthenticated page and is out of scope here, except for its check-ins
+(T28–T29, and the Android notes below).
 
 ## Assets
 
@@ -61,17 +61,50 @@ open risks.
 | T25 | Someone widens a kommun's access without authority. | Only a länsstyrelse admin for the kommun's län can change the level (not inspectors, owners, other län or the kommun itself); every change is audited with who made it; switching to the details level asks for confirmation. | **Done** (milestone 6) |
 | T26 | Aggregates leak detail (e.g. checked minus approved hints at deficiencies). | Accepted: the spec asks for shares checked and approved per kommun, and the counts are not tied to individual shelters at the default level. Revisit if kommuner become very small. | Accepted risk |
 | T27 | The demo login is abused to get into a project with real data. | `demo-login` only works when `DEMO_MODE=true` and only signs in as the four fixed demo users; the access code is compared in constant time, failures are throttled per IP, and the demo password never reaches the browser. Never set `DEMO_MODE` on a production project. | **Done** (milestone 7); keep `DEMO_MODE` off outside the demo |
+| T28 | The public map publishes live occupancy: how many people are in which shelter, with which skills, in real time. In wartime that is targeting information. Until this fix, `checkins` was publicly readable and pushed over Realtime, `shelter_status` gave per-shelter counts of medical, leadership and technical staff, and `shelter_activity` gave every check-in timestamp. | In `supabase/schema.sql` (repo root): check-ins are readable only by their owner and are out of the Realtime publication; questionnaire answers are readable only by their author; `shelter_status` and `shelter_activity` are dropped. The public gets one coarse level per shelter (`shelter_load`: "filling" from 70 % of capacity, "full" from 100 %; fewer than 5 people is never listed), computed on the server as of the latest 15-minute boundary at least 30 minutes old (`occupancy_publication` gives that time). No counts, roles, needs, supplies or timestamps per check-in. Check-in and check-out times are set by the server and can't be backdated or reopened, and party sizes can only be added within 10 minutes of checking in, so a published level can't be changed afterwards or probed with test check-ins. One operator switch (`public_occupancy_enabled`, one SQL line) decides whether anything is published: **off by default**, a missing setting counts as off, and switching it off empties both endpoints for the website and the Android app at once, with no app update. Tested on a throwaway local Supabase stack: access as anonymous visitor, other user and owner; levels, delay and switch; and check-in, check-out and routing end to end in the browser. | **Done**; operator switches it off at heightened alert |
+| T29 | Fake check-ins mark a shelter as full and steer people away from it (routing skips "full" shelters). | One active check-in per identity; party size capped at 20 adults and 30 children; new anonymous identities need hCaptcha; the effect only shows after 30–45 minutes; the operator switch turns the level and the skipping off. Residual: identities are still cheap without phone verification (see the comment at the end of `schema.sql`). | Partly done |
 
 ## Open risks needing a decision
 
-1. **The public map already publishes live occupancy.** The existing check-in feature
-   (`supabase/schema.sql` at the repo root) makes `checkins` publicly readable over
-   Realtime. It also publishes per-shelter counts of people with medical, leadership and
-   technical roles (`shelter_status`), and every check-in timestamp (`shelter_activity`).
-   The Android app reads the same data. This contradicts the principle that
-   occupancy must never be published in real time, and a länsstyrelse security reviewer
-   could find it. Options: turn it off, delay and aggregate it, or add an automatic
-   off-switch at heightened alert. **Decide before the pilot meetings.**
-2. **Session storage.** Supabase stores the session in localStorage. Acceptable with a
+1. **Session storage.** Supabase stores the session in localStorage. Acceptable with a
    strict CSP for the demo; revisit (e.g. shorter JWT lifetime, MFA) for production.
-3. **Single region, single provider.** No backup outside Supabase in Phase 1.
+2. **Single region, single provider.** No backup outside Supabase in Phase 1.
+3. **Public map questionnaire (GDPR data minimisation).** The check-in form still asks
+   for special needs, roles, supplies and equipment, but after T28 nobody except the
+   person and the operator can see the answers, and nothing uses them. Decide whether to
+   stop collecting them or give them a defined purpose (e.g. handing them to
+   räddningstjänsten during an activation).
+4. **Public map check-ins never expire.** Someone who never checks out keeps counting
+   toward "filling" or "full". Consider closing check-ins automatically after, say,
+   48 hours.
+
+## Public map: switching occupancy on, and what the Android app must change
+
+Operator steps after running the new `supabase/schema.sql`:
+
+1. Generate the capacities: `python supabase/build_capacity_csv.py`, then import
+   `supabase/shelter_capacity.csv` into the `shelter_capacity` table (Table Editor →
+   Import data from CSV). Nothing is published until that table has rows.
+2. In peacetime, to publish delayed levels:
+   `update operator_settings set enabled = true, updated_at = now() where key = 'public_occupancy_enabled';`
+3. At heightened alert, or whenever in doubt, run the same statement with `enabled = false`.
+
+The Android app (`skyddsrum-android/`, its own repository) reads `shelter_status` and
+`shelter_activity` in `data/LiveStatus.kt`, and both are gone. Until it is updated,
+those requests get HTTP 404 and the app shows its existing "Live status unavailable",
+so nothing crashes, but the live dashboard is dead. To update it:
+
+- Read `occupancy_publication?select=enabled,as_of` (always one row) and
+  `shelter_load?select=shelter_id,level` (rows only for `filling` and `full`; a shelter
+  that isn't listed has space). When `enabled` is false, show "Not published" with the
+  website's text, and never infer "space".
+- Show the level with "As of HH:MM, shown 30–45 minutes late"; `as_of` is UTC, so
+  format it in local time.
+- Remove the people, skills, resources and recent-activity views, `ShelterStatus`,
+  `ActivityEvent`, `LiveMath.resourceLevel`, `bucketActivity`, and the `totalPeople` /
+  `activeShelters` totals.
+- Routing: a shelter is full when its level is `full` (replaces `LiveMath.isFull`);
+  with nothing published, skip nothing.
+- Poll every 5 minutes at most instead of every 30 seconds; the level only changes every
+  15 minutes.
+- Update its README ("Live status, read-only") and privacy text to match.
