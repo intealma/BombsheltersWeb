@@ -1,0 +1,69 @@
+# Publishes the site to GitHub Pages: the public map as it is, plus the built
+# Beredskap app under /beredskap/. Needs Settings → Pages → Source: "GitHub Actions",
+# and two repository variables (public values only, never the service role key):
+#   BEREDSKAP_SUPABASE_URL       https://<project-ref>.supabase.co
+#   BEREDSKAP_SUPABASE_ANON_KEY  the project's anon / publishable key
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: beredskap/package-lock.json
+
+      - name: Build Beredskap
+        working-directory: beredskap
+        env:
+          BEREDSKAP_BASE: /${{ github.event.repository.name }}/beredskap/
+          VITE_SUPABASE_URL: ${{ vars.BEREDSKAP_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.BEREDSKAP_SUPABASE_ANON_KEY }}
+          VITE_DEMO_MODE: 'true'
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "::error::Set the repository variables BEREDSKAP_SUPABASE_URL and BEREDSKAP_SUPABASE_ANON_KEY."
+            exit 1
+          fi
+          npm ci
+          npm run build
+
+      - name: Assemble the site
+        run: |
+          mkdir _site
+          git ls-files | grep -v -E '^(beredskap|\.github|\.claude)/' | while IFS= read -r f; do
+            mkdir -p "_site/$(dirname "$f")"
+            cp "$f" "_site/$f"
+          done
+          cp -r beredskap/dist _site/beredskap
+          touch _site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

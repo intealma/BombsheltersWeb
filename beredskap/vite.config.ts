@@ -19,7 +19,7 @@ function jwtRole(value: string): string | undefined {
  * format; see docs/hosting.md for other hosts). Not applied in dev, where
  * Vite's hot reload needs inline scripts.
  */
-function securityHeaders(supabaseUrl: string): Plugin {
+function securityHeaders(supabaseUrl: string, base: string): Plugin {
   const supabase = new URL(supabaseUrl).origin;
   const csp = [
     "default-src 'self'",
@@ -38,7 +38,7 @@ function securityHeaders(supabaseUrl: string): Plugin {
   ].join('; ');
 
   const headers = [
-    '/beredskap/*',
+    `${base}*`,
     `  Content-Security-Policy: ${csp}; frame-ancestors 'none'; upgrade-insecure-requests`,
     '  Strict-Transport-Security: max-age=63072000; includeSubDomains',
     '  X-Content-Type-Options: nosniff',
@@ -71,9 +71,13 @@ export default defineConfig(({ mode }) => {
     }
   }
 
+  // Served under /beredskap/; GitHub Pages serves the repo at /BombsheltersWeb/, so its
+  // workflow sets BEREDSKAP_BASE=/BombsheltersWeb/beredskap/.
+  const base = process.env.BEREDSKAP_BASE || '/beredskap/';
+
   return {
-    base: '/beredskap/',
-    plugins: [preact(), securityHeaders(env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321')],
+    base,
+    plugins: [preact(), securityHeaders(env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321', base)],
     server: { port: 5173, strictPort: true },
     preview: { port: 4173, strictPort: true },
     build: { outDir: 'dist', sourcemap: false },
